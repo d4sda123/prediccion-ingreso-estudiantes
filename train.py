@@ -169,22 +169,30 @@ print(comparison_df)
 
 # 1. Gráfico de barras para R² Score
 plt.figure(figsize=(5, 6))
-plt.bar(comparison_df['Modelo'], comparison_df['R² Score'], color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
+r2_scores = comparison_df['R² Score'] * 100
+bars_r2 = plt.bar(comparison_df['Modelo'], r2_scores, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
 plt.title('Comparación R² Score')
-plt.ylabel('R² Score')
+plt.ylabel('R² Score (%)')
 plt.xticks(rotation=45)
 plt.grid(axis='y', alpha=0.3)
+# Añadir etiquetas de valor encima de cada barra
+for bar, value in zip(bars_r2, r2_scores):
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1, f'{value:.1f}%', ha='center', va='bottom', fontsize=10)
 plt.tight_layout()
 plt.savefig("images/comparacion_r2.png")
 #plt.show()
 
 # 2. Gráfico de barras para MSE
 plt.figure(figsize=(5, 6))
-plt.bar(comparison_df['Modelo'], comparison_df['MSE'], color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
-plt.title('Comparación Error Cuadrado Promedio (menor es mejor)')
+mse_vals = comparison_df['MSE']
+bars_mse = plt.bar(comparison_df['Modelo'], mse_vals, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
+plt.title('Comparación MSE (menor es mejor)')
 plt.ylabel('ECP')
 plt.xticks(rotation=45)
 plt.grid(axis='y', alpha=0.3)
+# Añadir etiquetas de valor encima de cada barra
+for bar, value in zip(bars_mse, mse_vals):
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(mse_vals) * 0.01), f'{value:.3f}', ha='center', va='bottom', fontsize=10)
 plt.tight_layout()
 plt.savefig("images/comparacion_mse.png")
 #plt.show()
@@ -226,6 +234,38 @@ clasificacion_df = pd.DataFrame({
 
 clasificacion_df = clasificacion_df.sort_values('Precisión', ascending=False).round(4)
 print(clasificacion_df)
+
+# 3. Gráfico de barras para Precisión (en porcentaje)
+plt.figure(figsize=(5, 6))
+precisiones = clasificacion_df['Precisión'] * 100
+bars = plt.bar(clasificacion_df['Modelo'], precisiones, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
+plt.title('Comparación de Precisión')
+plt.ylabel('Precisión (%)')
+plt.ylim(0, 100)
+plt.xticks(rotation=45)
+plt.grid(axis='y', alpha=0.3)
+# Añadir etiquetas de valor encima de cada barra
+for bar, value in zip(bars, precisiones):
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1, f'{value:.1f}%', ha='center', va='bottom', fontsize=10)
+plt.tight_layout()
+plt.savefig("images/comparacion_precision.png")
+#plt.show()
+
+# 4. Gráfico de barras para MCC
+plt.figure(figsize=(5, 6))
+mccs = clasificacion_df['CM']
+bars_mcc = plt.bar(clasificacion_df['Modelo'], mccs, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
+plt.title('Comparación MCC')
+plt.ylabel('MCC')
+plt.ylim(0, 1)
+plt.xticks(rotation=45)
+plt.grid(axis='y', alpha=0.3)
+# Añadir etiquetas de valor encima de cada barra
+for bar, value in zip(bars_mcc, mccs):
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02 * (1 if value >= 0 else -1), f'{value:.3f}', ha='center', va='bottom' if value >= 0 else 'top', fontsize=10)
+plt.tight_layout()
+plt.savefig("images/comparacion_mcc.png")
+#plt.show()
 
 # 4. Gráfico de líneas para todas las métricas normalizadas
 plt.figure(figsize=(5, 6))
@@ -401,6 +441,12 @@ add_subtitle(story, "Comparación Error Cuadrado Promedio")
 add_image(story, "images/comparacion_mse.png", 240, 300)
 add_subtitle(story, "Comparación Métricas")
 add_image(story, "images/comparacion_metricas.png", 240, 300)
+# Nueva gráfica de precisión
+add_subtitle(story, "Comparación Precisión")
+add_image(story, "images/comparacion_precision.png", 240, 300)
+# Nueva gráfica de MCC
+add_subtitle(story, "Comparación MCC")
+add_image(story, "images/comparacion_mcc.png", 240, 300)
 
 # Matrices de confusión
 for model in models_list:
