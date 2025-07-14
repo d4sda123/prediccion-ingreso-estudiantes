@@ -9,7 +9,7 @@ import pingouin as pg
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay, brier_score_loss
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.svm import SVR
@@ -93,12 +93,14 @@ results['Regresión Lineal'] = {
     'y_pred': lr_pred,
     'r2': r2_score(y_test, lr_pred),
     'mse': mean_squared_error(y_test, lr_pred),
-    'mae': mean_absolute_error(y_test, lr_pred)
+    'mae': mean_absolute_error(y_test, lr_pred),
+    'brier': brier_score_loss(y_test, np.clip(lr_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Regresión Lineal']['r2']:.4f}")
 print(f"MSE: {results['Regresión Lineal']['mse']:.4f}")
 print(f"MAE: {results['Regresión Lineal']['mae']:.4f}")
+print(f"Brier Score: {results['Regresión Lineal']['brier']:.4f}")
 
 # 2. Bosques Aleatorios
 print("\n2. Bosques Aleatorios:")
@@ -112,12 +114,14 @@ results['Bosques Aleatorios'] = {
     'y_pred': rf_pred,
     'r2': r2_score(y_test, rf_pred),
     'mse': mean_squared_error(y_test, rf_pred),
-    'mae': mean_absolute_error(y_test, rf_pred)
+    'mae': mean_absolute_error(y_test, rf_pred),
+    'brier': brier_score_loss(y_test, np.clip(rf_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Bosques Aleatorios']['r2']:.4f}")
 print(f"MSE: {results['Bosques Aleatorios']['mse']:.4f}")
 print(f"MAE: {results['Bosques Aleatorios']['mae']:.4f}")
+print(f"Brier Score: {results['Bosques Aleatorios']['brier']:.4f}")
 
 # 3. Regresión de Vectores de Soporte
 print("\n3. Support Vector Regression:")
@@ -131,12 +135,14 @@ results['Regresión de Vectores de Soporte'] = {
     'y_pred': svr_pred,
     'r2': r2_score(y_test, svr_pred),
     'mse': mean_squared_error(y_test, svr_pred),
-    'mae': mean_absolute_error(y_test, svr_pred)
+    'mae': mean_absolute_error(y_test, svr_pred),
+    'brier': brier_score_loss(y_test, np.clip(svr_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Regresión de Vectores de Soporte']['r2']:.4f}")
 print(f"MSE: {results['Regresión de Vectores de Soporte']['mse']:.4f}")
 print(f"MAE: {results['Regresión de Vectores de Soporte']['mae']:.4f}")
+print(f"Brier Score: {results['Regresión de Vectores de Soporte']['brier']:.4f}")
 
 # 4. Potenciación de Gradiente
 print("\n4. Potenciación de Gradiente:")
@@ -150,12 +156,14 @@ results['Potenciación de Gradiente'] = {
     'y_pred': gb_pred,
     'r2': r2_score(y_test, gb_pred),
     'mse': mean_squared_error(y_test, gb_pred),
-    'mae': mean_absolute_error(y_test, gb_pred)
+    'mae': mean_absolute_error(y_test, gb_pred),
+    'brier': brier_score_loss(y_test, np.clip(gb_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Potenciación de Gradiente']['r2']:.4f}")
 print(f"MSE: {results['Potenciación de Gradiente']['mse']:.4f}")
 print(f"MAE: {results['Potenciación de Gradiente']['mae']:.4f}")
+print(f"Brier Score: {results['Potenciación de Gradiente']['brier']:.4f}")
 
 # TABLA COMPARATIVA DE RESULTADOS
 print("\n" + "="*60)
@@ -166,7 +174,8 @@ comparison_df = pd.DataFrame({
     'Modelo': list(results.keys()),
     'R² Score': [results[model]['r2'] for model in results.keys()],
     'MSE': [results[model]['mse'] for model in results.keys()],
-    'MAE': [results[model]['mae'] for model in results.keys()]
+    'MAE': [results[model]['mae'] for model in results.keys()],
+    'Brier': [results[model]['brier'] for model in results.keys()]
 })
 
 comparison_df = comparison_df.sort_values('R² Score', ascending=False).round(4)
@@ -535,6 +544,18 @@ add_spacer(story, 1,6)
 add_subtitle(story, "Gráfico de residuales por modelo")
 add_image(story, boxplot_path, 400, 300)
 add_spacer(story, 1,6)
+
+# Mejor modelo
+add_subtitle(story, "Modelo Optimo")
+add_paragraph(story, f"<b>MEJOR MODELO:</b> {best_model_name}")
+add_paragraph(story, f"• Precisión: {results[best_model_name]['precision']}")
+add_paragraph(story, f"• Sensibilidad: {results[best_model_name]['recall']}")
+add_paragraph(story, f"• Puntuación F1: {results[best_model_name]['f1']}")
+add_paragraph(story, f"• Exactitud: {results[best_model_name]['accuracy']}")
+add_paragraph(story, f"• Coeficiente R2: {results[best_model_name]['r2']}")
+add_paragraph(story, f"• Error Absoluto Promedio: {results[best_model_name]['mae']}")
+add_paragraph(story, f"• Error Cuadrado Promedio: {results[best_model_name]['mse']}")
+add_paragraph(story, f"• Brier Score: {results[best_model_name]['brier']}")
 
 # Generar PDF
 build_pdf(doc, story)
