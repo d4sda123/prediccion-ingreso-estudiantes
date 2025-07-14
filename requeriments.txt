@@ -1,4 +1,8 @@
 streamlit
 seaborn
-statsmodel
+statsmodels
 reportlab
+joblib
+scikit-learn
+scikit_posthocs
+pingouin

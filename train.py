@@ -1,42 +1,46 @@
+from re import S
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import joblib
 import os
+import pingouin as pg
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay, matthews_corrcoef
-from statsmodels.stats.contingency_tables import mcnemar
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.svm import SVR
 from make_pdf import create_pdf, build_pdf, add_title, add_subtitle, add_paragraph, add_spacer, add_list, add_image, add_table
+from scipy.stats import shapiro, kstest, f_oneway, friedmanchisquare, wilcoxon
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import scikit_posthocs as sp
 
+# Lectura de datos
 ad_df = pd.read_csv("Datos_abiertos_admision_2021_1_2024_1.csv")
 
-
+# Limpieza de columnas y eliminar filas con valores nulos
 ad_df = ad_df.drop(['IDHASH', 'COLEGIO_DEPA', 'COLEGIO_PROV', 'COLEGIO_DIST',
                     'COLEGIO_PAIS', 'DOMICILIO_DEPA', 'DOMICILIO_PROV',
                     'DOMICILIO_DIST', 'NACIMIENTO_PAIS', 'NACIMIENTO_DEPA',
-                    'NACIMIENTO_PROV', 'NACIMIENTO_DIST'], axis=1)
+                    'NACIMIENTO_PROV', 'NACIMIENTO_DIST'], axis=1).dropna()
 
-print("Estadísticas descriptivas:")
+print("\n" + "="*60)
+print("ESTADÍSTICAS DESCRIPTIVAS")
+print("="*60+"\n")
 estadisticas = ad_df.describe()
 print(estadisticas)
 
-# Eliminar filas con valores nulos
-ad_df = ad_df.dropna()
-
-# Categorización
+# Categorización de datos
 columnas_categoricas = ['COLEGIO', 'ESPECIALIDAD', 'SEXO', 'MODALIDAD', 'INGRESO']
-label_encoders = {}  # Diccionario para guardar los encoders
+label_encoders = {}
 for col in columnas_categoricas:
   le = LabelEncoder()
   col_name = col + "_ENCODED"
   ad_df[col_name] = le.fit_transform(ad_df[col])
-  label_encoders[col] = le  # Guardar el encoder
+  label_encoders[col] = le
   ad_df = ad_df.drop(col, axis=1)
 
 # Visualización de correlaciones
@@ -44,7 +48,6 @@ plt.figure(figsize=(10, 8))
 sns.heatmap(ad_df.corr(), annot=True, cmap='coolwarm', center=0)
 plt.tight_layout()
 plt.savefig("images/matriz_correlacion.png")
-#plt.show()
 
 train_size = 0.8
 test_size = 1 - train_size
@@ -78,7 +81,7 @@ print("\n" + "="*60)
 print("ENTRENAMIENTO Y EVALUACIÓN DE MODELOS")
 print("="*60)
 
-# 1. REGLRESIÓN LINEA
+# 1. Regresión Lineal
 print("\n1. Regresión Lineal:")
 lr = LinearRegression()
 lr.fit(X_train_scaled, y_train)
@@ -86,6 +89,7 @@ lr_pred = lr.predict(X_test_scaled)
 
 models['Regresión Lineal'] = lr
 results['Regresión Lineal'] = {
+    'y_real': y_test,
     'y_pred': lr_pred,
     'r2': r2_score(y_test, lr_pred),
     'mse': mean_squared_error(y_test, lr_pred),
@@ -104,6 +108,7 @@ rf_pred = rf.predict(X_test)
 
 models['Bosques Aleatorios'] = rf
 results['Bosques Aleatorios'] = {
+    'y_real': y_test,
     'y_pred': rf_pred,
     'r2': r2_score(y_test, rf_pred),
     'mse': mean_squared_error(y_test, rf_pred),
@@ -114,7 +119,7 @@ print(f"R² Score: {results['Bosques Aleatorios']['r2']:.4f}")
 print(f"MSE: {results['Bosques Aleatorios']['mse']:.4f}")
 print(f"MAE: {results['Bosques Aleatorios']['mae']:.4f}")
 
-# 3. SUPPORT VECTOR REGRESSION
+# 3. Regresión de Vectores de Soporte
 print("\n3. Support Vector Regression:")
 svr = SVR(kernel='rbf', C=1.0, gamma='scale')
 svr.fit(X_train_scaled, y_train)
@@ -122,6 +127,7 @@ svr_pred = svr.predict(X_test_scaled)
 
 models['Regresión de Vectores de Soporte'] = svr
 results['Regresión de Vectores de Soporte'] = {
+    'y_real': y_test,
     'y_pred': svr_pred,
     'r2': r2_score(y_test, svr_pred),
     'mse': mean_squared_error(y_test, svr_pred),
@@ -135,11 +141,12 @@ print(f"MAE: {results['Regresión de Vectores de Soporte']['mae']:.4f}")
 # 4. Potenciación de Gradiente
 print("\n4. Potenciación de Gradiente:")
 gb = GradientBoostingRegressor(n_estimators=100, random_state=42)
-gb.fit(X_train, y_train)  # No necesita estandarización
+gb.fit(X_train, y_train)
 gb_pred = gb.predict(X_test)
 
 models['Potenciación de Gradiente'] = gb
 results['Potenciación de Gradiente'] = {
+    'y_real': y_test,
     'y_pred': gb_pred,
     'r2': r2_score(y_test, gb_pred),
     'mse': mean_squared_error(y_test, gb_pred),
@@ -175,12 +182,10 @@ plt.title('Comparación R² Score')
 plt.ylabel('R² Score (%)')
 plt.xticks(rotation=45)
 plt.grid(axis='y', alpha=0.3)
-# Añadir etiquetas de valor encima de cada barra
 for bar, value in zip(bars_r2, r2_scores):
     plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1, f'{value:.1f}%', ha='center', va='bottom', fontsize=10)
 plt.tight_layout()
 plt.savefig("images/comparacion_r2.png")
-#plt.show()
 
 # 2. Gráfico de barras para MSE
 plt.figure(figsize=(5, 6))
@@ -190,12 +195,10 @@ plt.title('Comparación MSE (menor es mejor)')
 plt.ylabel('ECP')
 plt.xticks(rotation=45)
 plt.grid(axis='y', alpha=0.3)
-# Añadir etiquetas de valor encima de cada barra
 for bar, value in zip(bars_mse, mse_vals):
     plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(mse_vals) * 0.01), f'{value:.3f}', ha='center', va='bottom', fontsize=10)
 plt.tight_layout()
 plt.savefig("images/comparacion_mse.png")
-#plt.show()
 
 # 3. Matrices de confusión
 colors = ['blue', 'green', 'red', 'orange']
@@ -208,12 +211,10 @@ for i, (model_name, color) in enumerate(zip(results.keys(), colors)):
   precision = tp / (tp + fp) if (tp + fp) > 0 else 0
   recall = tp / (tp + fn) if (tp + fn) > 0 else 0
   f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-  mcc = matthews_corrcoef(y_test_bin, y_pred)
   results[model_name]['accuracy'] = accuracy
   results[model_name]['precision'] = precision
   results[model_name]['recall'] = recall
   results[model_name]['f1'] = f1
-  results[model_name]['mcc'] = mcc
   disp = ConfusionMatrixDisplay(confusion_matrix=cm)
   disp.plot(cmap="Blues")
   plt.tight_layout()
@@ -229,7 +230,6 @@ clasificacion_df = pd.DataFrame({
     'R2': [results[model]['r2'] for model in results.keys()],
     'EAP': [results[model]['mae'] for model in results.keys()],
     'ECP': [results[model]['mse'] for model in results.keys()],
-    'CM': [results[model]['mcc'] for model in results.keys()],
 })
 
 clasificacion_df = clasificacion_df.sort_values('Precisión', ascending=False).round(4)
@@ -244,35 +244,17 @@ plt.ylabel('Precisión (%)')
 plt.ylim(0, 100)
 plt.xticks(rotation=45)
 plt.grid(axis='y', alpha=0.3)
-# Añadir etiquetas de valor encima de cada barra
 for bar, value in zip(bars, precisiones):
     plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1, f'{value:.1f}%', ha='center', va='bottom', fontsize=10)
 plt.tight_layout()
 plt.savefig("images/comparacion_precision.png")
-#plt.show()
-
-# 4. Gráfico de barras para MCC
-plt.figure(figsize=(5, 6))
-mccs = clasificacion_df['CM']
-bars_mcc = plt.bar(clasificacion_df['Modelo'], mccs, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
-plt.title('Comparación MCC')
-plt.ylabel('MCC')
-plt.ylim(0, 1)
-plt.xticks(rotation=45)
-plt.grid(axis='y', alpha=0.3)
-# Añadir etiquetas de valor encima de cada barra
-for bar, value in zip(bars_mcc, mccs):
-    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02 * (1 if value >= 0 else -1), f'{value:.3f}', ha='center', va='bottom' if value >= 0 else 'top', fontsize=10)
-plt.tight_layout()
-plt.savefig("images/comparacion_mcc.png")
-#plt.show()
 
 # 4. Gráfico de líneas para todas las métricas normalizadas
 plt.figure(figsize=(5, 6))
 metrics_norm = comparison_df.copy()
 metrics_norm['R² Score'] = metrics_norm['R² Score'] / metrics_norm['R² Score'].max()
-metrics_norm['MSE_inv'] = 1 - (metrics_norm['MSE'] / metrics_norm['MSE'].max())  # Invertir MSE para que mayor sea mejor
-metrics_norm['MAE_inv'] = 1 - (metrics_norm['MAE'] / metrics_norm['MAE'].max())  # Invertir MAE para que mayor sea mejor
+metrics_norm['MSE_inv'] = 1 - (metrics_norm['MSE'] / metrics_norm['MSE'].max())
+metrics_norm['MAE_inv'] = 1 - (metrics_norm['MAE'] / metrics_norm['MAE'].max())
 
 x = range(len(metrics_norm))
 plt.plot(x, metrics_norm['R² Score'], 'o-', label='R² Score (norm)', linewidth=2)
@@ -285,7 +267,6 @@ plt.legend()
 plt.grid(alpha=0.3)
 plt.tight_layout()
 plt.savefig("images/comparacion_metricas.png")
-#plt.show()
 
 # ANÁLISIS DE IMPORTANCIA DE CARACTERÍSTICAS (para modelos que lo soportan)
 print("\n" + "="*60)
@@ -333,9 +314,93 @@ plt.subplot(1, 3, 3)
 plt.barh(lr_coef['Feature'], lr_coef['Coefficient'])
 plt.title('Regresión Lineal - Coeficientes')
 plt.xlabel('Coeficiente')
-
 plt.tight_layout()
-#plt.show()
+
+# NORMALITY TESTS (Shapiro-Wilk and Kolmogorov-Smirnov)
+print("\n" + "="*60)
+print("TESTS DE NORMALIDAD DE RESIDUALES")
+print("="*60)
+
+normality_tests = []
+for model_name in results.keys():
+    residuals = y_test - results[model_name]['y_pred']
+    if len(residuals) <= 50:
+        stat, p = shapiro(residuals)
+        test = 'Shapiro-Wilk'
+    else:
+        stat, p = kstest(residuals, 'norm', args=(np.mean(residuals), np.std(residuals)))
+        test = 'Kolmogorov-Smirnov'
+        
+    normality_tests.append({
+        'model_name': model_name,
+        'stat': stat,
+        'p': p,
+        'test': test
+    })
+    print(f"\nModelo: {model_name}")
+    print(f"  {test}: stat={stat}, p={p}")
+
+normality_df = pd.DataFrame(normality_tests)
+
+# Determinar si los modelos pasan normalidad (p > 0.05)
+all_normal = all(normality_df['p'] > 0.05)
+
+# Prueba ANOVA o Friedman
+print("\n" + "="*60)
+print("COMPARACIÓN DE MODELOS: ANOVA o FRIEDMAN")
+print("="*60)
+
+residuals_list = [results[m]['y_pred'] - results[m]['y_real'] for m in results.keys()]
+residuals_matrix = np.column_stack(residuals_list)
+model_names = list(results.keys())
+
+posthoc_result = None
+posthoc_plot_path = None
+
+if all_normal:
+    # ANOVA
+    anova_stat, anova_p = f_oneway(*residuals_list)
+    print(f"\nANOVA: stat={anova_stat}, p={anova_p}")
+    test_used = 'ANOVA'
+    test_stat, test_p = anova_stat, anova_p
+    # Post-hoc: Tukey HSD
+    stacked_residuals = np.concatenate(residuals_list)
+    group_labels = np.concatenate([[name]*len(residuals_list[0]) for name in model_names])
+    tukey = pairwise_tukeyhsd(stacked_residuals, group_labels)
+    posthoc_result = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
+    # Plot
+    plt.figure(figsize=(15,9))
+    sp.sign_plot(posthoc_result['reject'].astype(float).values.reshape(len(model_names),-1), model_names)
+    plt.title('Tukey HSD Post-hoc')
+    posthoc_plot_path = 'images/posthoc_tukey.png'
+    plt.savefig(posthoc_plot_path)
+    plt.close()
+else:
+    # Friedman
+    friedman_stat, friedman_p = friedmanchisquare(*[residuals_matrix[:,i] for i in range(residuals_matrix.shape[1])])
+    print(f"\nFriedman: stat={friedman_stat}, p={friedman_p}")
+    test_used = 'Friedman'
+    test_stat, test_p = friedman_stat, friedman_p
+    # Post-hoc: Nemenyi
+    nemenyi = sp.posthoc_nemenyi_friedman(residuals_matrix)
+    posthoc_result = nemenyi
+    # Plot
+    plt.figure(figsize=(15,9))
+    sp.sign_plot(nemenyi.values, model_names)
+    plt.title('Nemenyi Post-hoc')
+    posthoc_plot_path = 'images/posthoc_nemenyi.png'
+    plt.savefig(posthoc_plot_path)
+    plt.close()
+
+# Residuales
+plt.figure(figsize=(10,8))
+plt.boxplot(residuals_list, tick_labels=model_names)
+plt.title('Boxplot de residuales por modelo')
+plt.ylabel('Residuales')
+plt.tight_layout()
+boxplot_path = 'images/boxplot_residuales.png'
+plt.savefig(boxplot_path)
+plt.close()
 
 # MEJOR MODELO
 best_model_name = comparison_df.iloc[0]['Modelo']
@@ -348,7 +413,7 @@ print(f"Esto significa que el modelo explica el {best_r2*100:.2f}% de la varianz
 # GUARDAR MODELOS Y SCALERS
 print("\n" + "="*60)
 print("GUARDANDO MODELOS Y SCALERS")
-print("="*60)
+print("="*60+"\n")
 
 # Crear directorio para modelos si no existe
 models_dir = "models"
@@ -439,14 +504,8 @@ add_subtitle(story, "Comparación R2")
 add_image(story, "images/comparacion_r2.png", 240, 300)
 add_subtitle(story, "Comparación Error Cuadrado Promedio")
 add_image(story, "images/comparacion_mse.png", 240, 300)
-add_subtitle(story, "Comparación Métricas")
-add_image(story, "images/comparacion_metricas.png", 240, 300)
-# Nueva gráfica de precisión
 add_subtitle(story, "Comparación Precisión")
 add_image(story, "images/comparacion_precision.png", 240, 300)
-# Nueva gráfica de MCC
-add_subtitle(story, "Comparación MCC")
-add_image(story, "images/comparacion_mcc.png", 240, 300)
 
 # Matrices de confusión
 for model in models_list:
@@ -459,90 +518,23 @@ add_subtitle(story, "Análisis de clasificación")
 add_table(story, clasificacion_df)
 add_spacer(story, 1,6)
 
-# McNemar test between all pairs of models
-model_names_sorted = list(comparison_df['Modelo'])
-mcnemar_matrix_p = pd.DataFrame(index=model_names_sorted, columns=model_names_sorted)
-mcnemar_matrix_stat = pd.DataFrame(index=model_names_sorted, columns=model_names_sorted)
-
-# Binarize y_test once
-y_test_bin = [1 if i > 0.5 else 0 for i in y_test]
-
-# Store binarized predictions for each model
-binarized_preds = {model: [1 if i > 0.5 else 0 for i in results[model]['y_pred']] for model in model_names_sorted}
-
-for i, model_i in enumerate(model_names_sorted):
-    for j, model_j in enumerate(model_names_sorted):
-        if i == j:
-            mcnemar_matrix_p.loc[model_i, model_j] = '-'
-            mcnemar_matrix_stat.loc[model_i, model_j] = '-'
-        elif pd.isnull(mcnemar_matrix_p.loc[model_i, model_j]):
-            y_pred_i = binarized_preds[model_i]
-            y_pred_j = binarized_preds[model_j]
-            contingency = np.zeros((2,2), dtype=int)
-            for yt, yi, yj in zip(y_test_bin, y_pred_i, y_pred_j):
-                if yi == yt and yj == yt:
-                    contingency[0,0] += 1  # both correct
-                elif yi == yt and yj != yt:
-                    contingency[0,1] += 1  # i correct only
-                elif yi != yt and yj == yt:
-                    contingency[1,0] += 1  # j correct only
-                else:
-                    contingency[1,1] += 1  # both wrong
-            mcnemar_result = mcnemar(contingency, exact=True)
-            mcnemar_matrix_p.loc[model_i, model_j] = mcnemar_result.pvalue
-            mcnemar_matrix_stat.loc[model_i, model_j] = mcnemar_result.statistic
-            # Fill symmetric value
-            mcnemar_matrix_p.loc[model_j, model_i] = mcnemar_result.pvalue
-            mcnemar_matrix_stat.loc[model_j, model_i] = mcnemar_result.statistic
-
-# Add McNemar summary tables to PDF
-add_subtitle(story, "Matriz de p-valores de McNemar entre modelos")
-add_table(story, mcnemar_matrix_p.round(4))
+add_subtitle(story, "Test de normalidad de residuales (Shapiro-Wilk y Kolmogorov-Smirnov)")
+normality_table = pd.DataFrame(normality_tests)
+add_table(story, normality_table)
 add_spacer(story, 1,6)
 
-add_subtitle(story, "Matriz de estadísticos de McNemar entre modelos")
-add_table(story, mcnemar_matrix_stat.round(2))
+add_subtitle(story, "Comparación de modelos (ANOVA o Friedman)")
+add_paragraph(story, f"Test usado: {test_used}")
+add_paragraph(story, f"stat={test_stat}, p={test_p}")
+if test_p < 0.05:
+    add_paragraph(story, "\nDiferencias significativas entre modelos (p < 0.05)")
+else:
+    add_paragraph(story, "\nNo hay diferencias significativas entre modelos (p >= 0.05)")
 add_spacer(story, 1,6)
 
-# Mejor modelo
-add_subtitle(story, "Modelo Optimo")
-add_paragraph(story, f"<b>MEJOR MODELO:</b> {best_model_name}")
-add_paragraph(story, f"• Precisión: {results[best_model_name]['precision']}")
-add_paragraph(story, f"• Sensibilidad: {results[best_model_name]['recall']}")
-add_paragraph(story, f"• Puntuación F1: {results[best_model_name]['f1']}")
-add_paragraph(story, f"• Exactitud: {results[best_model_name]['accuracy']}")
-add_paragraph(story, f"• Coeficiente R2: {results[best_model_name]['r2']}")
-add_paragraph(story, f"• Error Absoluto Promedio: {results[best_model_name]['mae']}")
-add_paragraph(story, f"• Error Cuadrado Promedio: {results[best_model_name]['mse']}")
-add_paragraph(story, f"• Coeficiente de Mathews: {results[best_model_name]['mcc']}")
-
-# McNemar test between best and second-best model
-model_names_sorted = list(comparison_df['Modelo'])
-best_model_name = model_names_sorted[0]
-second_best_model_name = model_names_sorted[1]
-y_pred_best = [1 if i > 0.5 else 0 for i in results[best_model_name]['y_pred']]
-y_pred_second = [1 if i > 0.5 else 0 for i in results[second_best_model_name]['y_pred']]
-y_test_bin = [1 if i > 0.5 else 0 for i in y_test]
-# Build 2x2 contingency table
-# Rows: y_test, Cols: predictions
-# Table: [[both correct, best correct only], [second correct only, both wrong]]
-contingency = np.zeros((2,2), dtype=int)
-for yt, yb, ys in zip(y_test_bin, y_pred_best, y_pred_second):
-    if yb == yt and ys == yt:
-        contingency[0,0] += 1  # both correct
-    elif yb == yt and ys != yt:
-        contingency[0,1] += 1  # best correct only
-    elif yb != yt and ys == yt:
-        contingency[1,0] += 1  # second correct only
-    else:
-        contingency[1,1] += 1  # both wrong
-mcnemar_result = mcnemar(contingency, exact=True)
-# Add to results for reporting
-results[best_model_name]['mcnemar_pvalue_vs_second'] = mcnemar_result.pvalue
-results[best_model_name]['mcnemar_statistic_vs_second'] = mcnemar_result.statistic
-
-add_paragraph(story, f"• McNemar p-valor (vs {second_best_model_name}): {results[best_model_name]['mcnemar_pvalue_vs_second']}")
-add_paragraph(story, f"• McNemar estadístico (vs {second_best_model_name}): {results[best_model_name]['mcnemar_statistic_vs_second']}")
+add_subtitle(story, "Gráfico de residuales por modelo")
+add_image(story, boxplot_path, 400, 300)
+add_spacer(story, 1,6)
 
 # Generar PDF
 build_pdf(doc, story)
