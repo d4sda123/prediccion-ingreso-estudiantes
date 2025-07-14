@@ -178,6 +178,20 @@ comparison_df = pd.DataFrame({
     'Brier': [results[model]['brier'] for model in results.keys()]
 })
 
+# Brier Score Comparison Plot
+plt.figure(figsize=(5, 6))
+brier_scores = comparison_df['Brier']
+bars_brier = plt.bar(comparison_df['Modelo'], brier_scores, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
+plt.title('Comparación Brier Score (menor es mejor)')
+plt.ylabel('Brier Score')
+plt.xticks(rotation=45)
+plt.grid(axis='y', alpha=0.3)
+for bar, value in zip(bars_brier, brier_scores):
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + (max(brier_scores) * 0.01), f'{value:.4f}', ha='center', va='bottom', fontsize=10)
+plt.tight_layout()
+plt.savefig("images/comparacion_brier.png")
+#plt.show()
+
 comparison_df = comparison_df.sort_values('R² Score', ascending=False).round(4)
 print(comparison_df)
 
@@ -516,6 +530,8 @@ add_subtitle(story, "Comparación Error Cuadrado Promedio")
 add_image(story, "images/comparacion_mse.png", 240, 300)
 add_subtitle(story, "Comparación Precisión")
 add_image(story, "images/comparacion_precision.png", 240, 300)
+add_subtitle(story, "Comparación Brier Score")
+add_image(story, "images/comparacion_brier.png", 240, 300)
 
 # Matrices de confusión
 for model in models_list:
