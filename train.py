@@ -9,7 +9,7 @@ import pingouin as pg
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay, brier_score_loss
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, brier_score_loss
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.svm import SVR
@@ -93,12 +93,14 @@ results['Regresión Lineal'] = {
     'y_pred': lr_pred,
     'r2': r2_score(y_test, lr_pred),
     'mse': mean_squared_error(y_test, lr_pred),
+    'rmse': np.sqrt(mean_squared_error(y_test, lr_pred)),
     'mae': mean_absolute_error(y_test, lr_pred),
     'brier': brier_score_loss(y_test, np.clip(lr_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Regresión Lineal']['r2']:.4f}")
 print(f"MSE: {results['Regresión Lineal']['mse']:.4f}")
+print(f"RMSE: {results['Regresión Lineal']['rmse']:.4f}")
 print(f"MAE: {results['Regresión Lineal']['mae']:.4f}")
 print(f"Brier Score: {results['Regresión Lineal']['brier']:.4f}")
 
@@ -114,12 +116,14 @@ results['Bosques Aleatorios'] = {
     'y_pred': rf_pred,
     'r2': r2_score(y_test, rf_pred),
     'mse': mean_squared_error(y_test, rf_pred),
+    'rmse': np.sqrt(mean_squared_error(y_test, rf_pred)),
     'mae': mean_absolute_error(y_test, rf_pred),
     'brier': brier_score_loss(y_test, np.clip(rf_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Bosques Aleatorios']['r2']:.4f}")
 print(f"MSE: {results['Bosques Aleatorios']['mse']:.4f}")
+print(f"RMSE: {results['Bosques Aleatorios']['rmse']:.4f}")
 print(f"MAE: {results['Bosques Aleatorios']['mae']:.4f}")
 print(f"Brier Score: {results['Bosques Aleatorios']['brier']:.4f}")
 
@@ -135,12 +139,14 @@ results['Regresión de Vectores de Soporte'] = {
     'y_pred': svr_pred,
     'r2': r2_score(y_test, svr_pred),
     'mse': mean_squared_error(y_test, svr_pred),
+    'rmse': np.sqrt(mean_squared_error(y_test, svr_pred)),
     'mae': mean_absolute_error(y_test, svr_pred),
     'brier': brier_score_loss(y_test, np.clip(svr_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Regresión de Vectores de Soporte']['r2']:.4f}")
 print(f"MSE: {results['Regresión de Vectores de Soporte']['mse']:.4f}")
+print(f"RMSE: {results['Regresión de Vectores de Soporte']['rmse']:.4f}")
 print(f"MAE: {results['Regresión de Vectores de Soporte']['mae']:.4f}")
 print(f"Brier Score: {results['Regresión de Vectores de Soporte']['brier']:.4f}")
 
@@ -156,12 +162,14 @@ results['Potenciación de Gradiente'] = {
     'y_pred': gb_pred,
     'r2': r2_score(y_test, gb_pred),
     'mse': mean_squared_error(y_test, gb_pred),
+    'rmse': np.sqrt(mean_squared_error(y_test, gb_pred)),
     'mae': mean_absolute_error(y_test, gb_pred),
     'brier': brier_score_loss(y_test, np.clip(gb_pred, 0, 1))
 }
 
 print(f"R² Score: {results['Potenciación de Gradiente']['r2']:.4f}")
 print(f"MSE: {results['Potenciación de Gradiente']['mse']:.4f}")
+print(f"RMSE: {results['Potenciación de Gradiente']['rmse']:.4f}")
 print(f"MAE: {results['Potenciación de Gradiente']['mae']:.4f}")
 print(f"Brier Score: {results['Potenciación de Gradiente']['brier']:.4f}")
 
@@ -174,6 +182,7 @@ comparison_df = pd.DataFrame({
     'Modelo': list(results.keys()),
     'R² Score': [results[model]['r2'] for model in results.keys()],
     'MSE': [results[model]['mse'] for model in results.keys()],
+    'RMSE': [results[model]['rmse'] for model in results.keys()],
     'MAE': [results[model]['mae'] for model in results.keys()],
     'Brier': [results[model]['brier'] for model in results.keys()]
 })
@@ -223,45 +232,23 @@ for bar, value in zip(bars_mse, mse_vals):
 plt.tight_layout()
 plt.savefig("images/comparacion_mse.png")
 
-# 3. Matrices de confusión
-colors = ['blue', 'green', 'red', 'orange']
-for i, (model_name, color) in enumerate(zip(results.keys(), colors)):
-  y_pred = [1 if i > 0.5 else 0  for i in results[model_name]['y_pred']]
-  y_test_bin = [1 if i > 0.5 else 0 for i in y_test]
-  cm = confusion_matrix(y_test_bin, y_pred)
-  tn, fp, fn, tp = cm.ravel()
-  accuracy = (tp + tn) / (tp + tn + fp + fn)
-  precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-  recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-  f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-  results[model_name]['accuracy'] = accuracy
-  results[model_name]['precision'] = precision
-  results[model_name]['recall'] = recall
-  results[model_name]['f1'] = f1
-  disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-  disp.plot(cmap="Blues")
-  plt.tight_layout()
-  plt.savefig(f"images/matriz_confusion_{model_name}.png")
-  #plt.show()
+# Remove any code that uses confusion_matrix or ConfusionMatrixDisplay
 
 clasificacion_df = pd.DataFrame({
     'Modelo': list(results.keys()),
-    'Precisión': [results[model]['precision'] for model in results.keys()],
-    'Sensibilidad': [results[model]['recall'] for model in results.keys()],
-    'Exactitud': [results[model]['accuracy'] for model in results.keys()],
-    'F1': [results[model]['f1'] for model in results.keys()],
     'R2': [results[model]['r2'] for model in results.keys()],
     'EAP': [results[model]['mae'] for model in results.keys()],
+    'RECP': [results[model]['rmse'] for model in results.keys()],
     'ECP': [results[model]['mse'] for model in results.keys()],
     'Brier': [results[model]['brier'] for model in results.keys()],
 })
 
-clasificacion_df = clasificacion_df.sort_values('Precisión', ascending=False).round(4)
+clasificacion_df = clasificacion_df.sort_values('R2', ascending=False).round(4)
 print(clasificacion_df)
 
 # 3. Gráfico de barras para Precisión (en porcentaje)
 plt.figure(figsize=(5, 6))
-precisiones = clasificacion_df['Precisión'] * 100
+precisiones = clasificacion_df['R2'] * 100
 bars = plt.bar(clasificacion_df['Modelo'], precisiones, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
 plt.title('Comparación de Precisión')
 plt.ylabel('Precisión (%)')
@@ -272,25 +259,6 @@ for bar, value in zip(bars, precisiones):
     plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1, f'{value:.1f}%', ha='center', va='bottom', fontsize=10)
 plt.tight_layout()
 plt.savefig("images/comparacion_precision.png")
-
-# 4. Gráfico de líneas para todas las métricas normalizadas
-plt.figure(figsize=(5, 6))
-metrics_norm = comparison_df.copy()
-metrics_norm['R² Score'] = metrics_norm['R² Score'] / metrics_norm['R² Score'].max()
-metrics_norm['MSE_inv'] = 1 - (metrics_norm['MSE'] / metrics_norm['MSE'].max())
-metrics_norm['MAE_inv'] = 1 - (metrics_norm['MAE'] / metrics_norm['MAE'].max())
-
-x = range(len(metrics_norm))
-plt.plot(x, metrics_norm['R² Score'], 'o-', label='R² Score (norm)', linewidth=2)
-plt.plot(x, metrics_norm['MSE_inv'], 's-', label='MSE (inv norm)', linewidth=2)
-plt.plot(x, metrics_norm['MAE_inv'], '^-', label='MAE (inv norm)', linewidth=2)
-plt.xticks(x, metrics_norm['Modelo'], rotation=45)
-plt.ylabel('Puntuación Normalizada')
-plt.title('Métricas Normalizadas')
-plt.legend()
-plt.grid(alpha=0.3)
-plt.tight_layout()
-plt.savefig("images/comparacion_metricas.png")
 
 # ANÁLISIS DE IMPORTANCIA DE CARACTERÍSTICAS (para modelos que lo soportan)
 print("\n" + "="*60)
@@ -533,12 +501,6 @@ add_image(story, "images/comparacion_precision.png", 240, 300)
 add_subtitle(story, "Comparación Brier Score")
 add_image(story, "images/comparacion_brier.png", 240, 300)
 
-# Matrices de confusión
-for model in models_list:
-  add_subtitle(story, f"Matriz de confusión de {model}")
-  add_image(story, f"images/matriz_confusion_{model}.png", 320, 240)
-add_spacer(story, 1,6)
-
 # Análisis de clasificación
 add_subtitle(story, "Análisis de clasificación")
 add_table(story, clasificacion_df)
@@ -565,12 +527,9 @@ add_spacer(story, 1,6)
 # Mejor modelo
 add_subtitle(story, "Modelo Optimo")
 add_paragraph(story, f"<b>MEJOR MODELO:</b> {best_model_name}")
-add_paragraph(story, f"• Precisión: {results[best_model_name]['precision']}")
-add_paragraph(story, f"• Sensibilidad: {results[best_model_name]['recall']}")
-add_paragraph(story, f"• Puntuación F1: {results[best_model_name]['f1']}")
-add_paragraph(story, f"• Exactitud: {results[best_model_name]['accuracy']}")
-add_paragraph(story, f"• Coeficiente R2: {results[best_model_name]['r2']}")
+add_paragraph(story, f"• R2: {results[best_model_name]['r2']}")
 add_paragraph(story, f"• Error Absoluto Promedio: {results[best_model_name]['mae']}")
+add_paragraph(story, f"• Raiz del Error Cuadrado Promedio: {results[best_model_name]['rmse']}")
 add_paragraph(story, f"• Error Cuadrado Promedio: {results[best_model_name]['mse']}")
 add_paragraph(story, f"• Brier Score: {results[best_model_name]['brier']}")
 
