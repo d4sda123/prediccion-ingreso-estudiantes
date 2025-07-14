@@ -239,6 +239,7 @@ clasificacion_df = pd.DataFrame({
     'R2': [results[model]['r2'] for model in results.keys()],
     'EAP': [results[model]['mae'] for model in results.keys()],
     'ECP': [results[model]['mse'] for model in results.keys()],
+    'Brier': [results[model]['brier'] for model in results.keys()],
 })
 
 clasificacion_df = clasificacion_df.sort_values('Precisión', ascending=False).round(4)
