@@ -253,7 +253,6 @@ def generar_pdf_formulario(datos, prediccion):
     add_subtitle(story, "Información del Modelo")
     add_paragraph(story, "• Modelo: Bosques Aleatorios")
     add_paragraph(story, "• R² Score: 86.31%")
-    add_paragraph(story, "• Precisión: 91.97%")
     add_paragraph(story, "• Características: 9 variables")
     
     # Fecha de generación
