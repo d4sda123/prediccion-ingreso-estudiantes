@@ -9,20 +9,130 @@ from make_pdf import create_pdf, add_title, add_subtitle, add_paragraph, add_spa
 import tempfile
 import base64
 
-prediccion_valor = 0
-prob_ingreso = 0
+# Language dictionary
+LANG_DICT = {
+    'es': {
+        'main_title': "🎓 Predictor de Ingreso Universitario",
+        'subtitle': "**Sistema de predicción basado en Machine Learning**",
+        'student_info': "📋 Información del Estudiante",
+        'year_of_birth': "Año de Nacimiento",
+        'sex': "Sexo",
+        'sexs': ['Masculino', 'Femenino'],
+        'school_name': "Nombre del Colegio",
+        'year_of_graduation': "Año de Egreso del Colegio",
+        'university_specialty': "Especialidad Universitaria",
+        'year_of_application': "Año de Postulación",
+        'cycle': "Ciclo del Año",
+        'cycles': ['I Ciclo', 'II Ciclo'],
+        'application_mode': "Modalidad de Postulación",
+        'academic_performance': "📊 Rendimiento Académico",
+        'final_grade': "Calificación Final",
+        'final_grade_help': "Calificación obtenida en el proceso de admisión",
+        'predict_button': "🔮 Predecir Ingreso",
+        'pdf_button': "📄 Generar PDF",
+        'error_found': "❌ Se encontraron los siguientes errores:",
+        'complete_fields': "❌ Por favor, complete todos los campos obligatorios",
+        'success_data': "✅ Datos procesados exitosamente!",
+        'prediction_result': "🔮 Resultado de la Predicción",
+        'likely_admission': "🎉 **INGRESO PROBABLE**",
+        'unlikely_admission': "❌ **INGRESO POCO PROBABLE**",
+        'admission_probability': "Probabilidad de Ingreso",
+        'model_info': "🤖 Modelo utilizado: {model} (R² = 86.31%)",
+        'prediction_error': "❌ Error en la predicción: {e}",
+        'prediction_hint': "💡 Asegúrate de que los valores ingresados sean válidos para el modelo entrenado.",
+        'factor_analysis': "📈 Análisis de Factores",
+        'excellent_grade': "✅ Excelente calificación (≥15)",
+        'average_grade': "⚠️ Calificación promedio (12-14)",
+        'low_grade': "❌ Calificación baja (<12)",
+        'favorable_mode': "✅ Modalidad favorable",
+        'typical_age': "✅ Edad típica para postulación",
+        'early_application': "✅ Postulación temprana",
+        'late_application': "⚠️ Varios años desde egreso",
+        'pdf_generation': "📄 Generación de PDF",
+        'pdf_success': "✅ PDF generado exitosamente!",
+        'pdf_error': "❌ Error al generar PDF: {e}",
+        'data_summary': "📋 Resumen de Datos",
+        'sidebar_info': "ℹ️ Información del Modelo",
+        'sidebar_model': "**Modelo:** {model}\n\n**R² Score:** 86.31%\n**Precisión:** 91.97%\n**Características:** 9 variables\n\n**Mejor modelo entrenado con datos reales**",
+        'sidebar_report': "📄 Descargar Reporte de Entrenamiento",
+        'footer': "---",
+        'language': "Idioma",
+        'spanish': "Español",
+        'english': "Inglés"
+    },
+    'en': {
+        'main_title': "🎓 University Admission Predictor",
+        'subtitle': "**Prediction system based on Machine Learning**",
+        'student_info': "📋 Student Information",
+        'year_of_birth': "Year of Birth",
+        'sex': "Sex",
+        'sexs': ['Masculine', 'Femenine'],
+        'school_name': "School Name",
+        'year_of_graduation': "Year of Graduation",
+        'university_specialty': "University Specialty",
+        'year_of_application': "Year of Application",
+        'cycle': "Year Cycle",
+        'cycles': ['I Cycle', 'II Cycle'],
+        'application_mode': "Application Mode",
+        'academic_performance': "📊 Academic Performance",
+        'final_grade': "Final Grade",
+        'final_grade_help': "Grade obtained in the admission process",
+        'predict_button': "🔮 Predict Admission",
+        'pdf_button': "📄 Generate PDF",
+        'error_found': "❌ The following errors were found:",
+        'complete_fields': "❌ Please complete all required fields",
+        'success_data': "✅ Data processed successfully!",
+        'prediction_result': "🔮 Prediction Result",
+        'likely_admission': "🎉 **LIKELY ADMISSION**",
+        'unlikely_admission': "❌ **UNLIKELY ADMISSION**",
+        'admission_probability': "Admission Probability",
+        'model_info': "🤖 Model used: {model} (R² = 86.31%)",
+        'prediction_error': "❌ Prediction error: {e}",
+        'prediction_hint': "💡 Make sure the entered values are valid for the trained model.",
+        'factor_analysis': "📈 Factor Analysis",
+        'excellent_grade': "✅ Excellent grade (≥15)",
+        'average_grade': "⚠️ Average grade (12-14)",
+        'low_grade': "❌ Low grade (<12)",
+        'favorable_mode': "✅ Favorable mode",
+        'typical_age': "✅ Typical age for application",
+        'early_application': "✅ Early application",
+        'late_application': "⚠️ Several years since graduation",
+        'pdf_generation': "📄 PDF Generation",
+        'pdf_success': "✅ PDF generated successfully!",
+        'pdf_error': "❌ Error generating PDF: {e}",
+        'data_summary': "📋 Data Summary",
+        'sidebar_info': "ℹ️ Model Information",
+        'sidebar_model': "**Model:** {model}\n\n**R² Score:** 86.31%\n**Accuracy:** 91.97%\n**Features:** 9 variables\n\n**Best model trained with real data**",
+        'sidebar_report': "📄 Download Training Report",
+        'footer': "---",
+        'language': "Language",
+        'spanish': "Spanish",
+        'english': "English"
+    }
+}
+
+# Language selection (persist in session state)
+if 'lang' not in st.session_state:
+    st.session_state['lang'] = 'es'
+lang = st.sidebar.selectbox(
+    LANG_DICT[st.session_state['lang']]['language'],
+    options=['es', 'en'],
+    format_func=lambda x: LANG_DICT[x]['spanish'] if x == 'es' else LANG_DICT[x]['english'],
+    key='lang'
+)
+lang_dict = LANG_DICT[st.session_state['lang']]
 
 # Configuración de la página
 st.set_page_config(
-    page_title="Predictor de Ingreso Universitario",
+    page_title=lang_dict['main_title'],
     page_icon="🎓",
     layout="wide"
 )
 
 # Título principal
-st.title("🎓 Predictor de Ingreso Universitario")
-st.markdown("**Sistema de predicción basado en Machine Learning**")
-st.markdown("---")
+st.title(lang_dict['main_title'])
+st.markdown(lang_dict['subtitle'])
+st.markdown(lang_dict['footer'])
 
 # Funciones para cargar el modelo real entrenado y label encoders usados
 @st.cache_resource
@@ -167,13 +277,13 @@ def get_pdf_download_link(pdf_path, filename):
 
 # Crear el formulario
 with st.form("formulario_prediccion"):
-    st.subheader("📋 Información del Estudiante")
+    st.subheader(lang_dict['student_info'])
 
     col1, col2 = st.columns(2)
 
     with col1:
         año_nacimiento = st.number_input(
-            "Año de Nacimiento",
+            lang_dict['year_of_birth'],
             min_value=1950,
             max_value=datetime.now().year - 15,
             value=2000,
@@ -181,12 +291,12 @@ with st.form("formulario_prediccion"):
         )
 
         sexo = st.selectbox(
-            "Sexo",
-            ["MASCULINO", "F"]
+            lang_dict['sex'],
+            lang_dict['sexs']
         )
 
         colegio = st.selectbox(
-            "Nombre del Colegio",
+            lang_dict['school_name'],
             [
                 "LA DIVINA PROVIDENCIA",
                 "86019 LA LIBERTAD",
@@ -203,7 +313,7 @@ with st.form("formulario_prediccion"):
         )
 
         año_egreso = st.number_input(
-            "Año de Egreso del Colegio",
+            lang_dict['year_of_graduation'],
             min_value=1970,
             max_value=datetime.now().year,
             value=2018,
@@ -212,7 +322,7 @@ with st.form("formulario_prediccion"):
 
     with col2:
         especialidad = st.selectbox(
-            "Especialidad Universitaria",
+            lang_dict['university_specialty'],
             [
                 "INGENIERÍA DE SISTEMAS",
                 "INGENIERÍA DE TELECOMUNICACIONES", 
@@ -228,7 +338,7 @@ with st.form("formulario_prediccion"):
         )
 
         año_postulacion = st.number_input(
-            "Año de Postulación",
+            lang_dict['year_of_application'],
             min_value=2000,
             max_value=datetime.now().year + 2,
             value=datetime.now().year,
@@ -236,12 +346,12 @@ with st.form("formulario_prediccion"):
         )
 
         ciclo = st.selectbox(
-            "Ciclo del Año",
-            ["I Ciclo", "II Ciclo"]
+            lang_dict['cycle'],
+            lang_dict['cycles']
         )
 
         modalidad = st.selectbox(
-            "Modalidad de Postulación",
+            lang_dict['application_mode'],
             [
                 "ORDINARIO",
                 "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)",
@@ -254,25 +364,25 @@ with st.form("formulario_prediccion"):
             ]
         )
 
-    st.subheader("📊 Rendimiento Académico")
+    st.subheader(lang_dict['academic_performance'])
     calificacion_final = st.number_input(
-        "Calificación Final",
+        lang_dict['final_grade'],
         min_value=0.0,
         max_value=20.0,
         value=0.0,
         step=0.1,
         format="%.1f",
-        help="Calificación obtenida en el proceso de admisión"
+        help=lang_dict['final_grade_help']
     )
 
     # Botones del formulario
     col_btn1, col_btn2 = st.columns(2)
 
     with col_btn1:
-        predecir = st.form_submit_button("🔮 Predecir Ingreso", type="primary")
+        predecir = st.form_submit_button(lang_dict['predict_button'], type="primary")
 
     with col_btn2:
-        generar_pdf = st.form_submit_button("📄 Generar PDF", type="secondary")
+        generar_pdf = st.form_submit_button(lang_dict['pdf_button'], type="secondary")
 
     # Procesamiento del formulario
     if predecir or generar_pdf:
@@ -293,20 +403,20 @@ with st.form("formulario_prediccion"):
         errores = validar_datos(datos)
 
         if errores:
-            st.error("❌ Se encontraron los siguientes errores:")
+            st.error(lang_dict['error_found'])
             for error in errores:
                 st.error(f"• {error}")
         else:
             # Campos obligatorios
             if not colegio.strip() or not especialidad.strip():
-                st.error("❌ Por favor, complete todos los campos obligatorios")
+                st.error(lang_dict['complete_fields'])
             else:
-                st.success("✅ Datos procesados exitosamente!")
+                st.success(lang_dict['success_data'])
 
                 # Realizar predicción si se solicitó
                 if predecir:
-                    st.markdown("---")
-                    st.subheader("🔮 Resultado de la Predicción")
+                    st.markdown(lang_dict['footer'])
+                    st.subheader(lang_dict['prediction_result'])
 
                     try:
                         # Preprocesar datos para el modelo
@@ -322,57 +432,57 @@ with st.form("formulario_prediccion"):
 
                         with col_pred1:
                             if prediccion_valor > 0.5:
-                                st.success("🎉 **INGRESO PROBABLE**")
+                                st.success(lang_dict['likely_admission'])
                                 st.balloons()
                             else:
-                                st.error("❌ **INGRESO POCO PROBABLE**")
+                                st.error(lang_dict['unlikely_admission'])
 
                         with col_pred2:
                             st.metric(
-                                "Probabilidad de Ingreso",
+                                lang_dict['admission_probability'],
                                 f"{prob_ingreso:.1f}%",
                                 delta=f"{prob_ingreso-50:.1f}%" if prob_ingreso > 50 else None
                             )
                         
                         # Mostrar información del modelo
-                        st.info(f"🤖 Modelo utilizado: {type(model).__name__} (R² = 86.31%)")
+                        st.info(lang_dict['model_info'].format(model=type(model).__name__))
                         
                     except Exception as e:
-                        st.error(f"❌ Error en la predicción: {e}")
-                        st.info("💡 Asegúrate de que los valores ingresados sean válidos para el modelo entrenado.")
+                        st.error(lang_dict['prediction_error'].format(e=e))
+                        st.info(lang_dict['prediction_hint'])
 
                     # Mostrar factores influyentes
-                    st.subheader("📈 Análisis de Factores")
+                    st.subheader(lang_dict['factor_analysis'])
 
                     # Crear análisis básico
                     factores = []
                     if calificacion_final >= 15:
-                        factores.append("✅ Excelente calificación (≥15)")
+                        factores.append(lang_dict['excellent_grade'])
                     elif calificacion_final >= 12:
-                        factores.append("⚠️ Calificación promedio (12-14)")
+                        factores.append(lang_dict['average_grade'])
                     else:
-                        factores.append("❌ Calificación baja (<12)")
+                        factores.append(lang_dict['low_grade'])
 
                     if modalidad in ["Primeros Puestos", "Centro Pre-Universitario"]:
-                        factores.append("✅ Modalidad favorable")
+                        factores.append(lang_dict['favorable_mode'])
 
                     edad = datetime.now().year - año_nacimiento
                     if 17 <= edad <= 22:
-                        factores.append("✅ Edad típica para postulación")
+                        factores.append(lang_dict['typical_age'])
 
                     años_espera = año_postulacion - año_egreso
                     if años_espera <= 2:
-                        factores.append("✅ Postulación temprana")
+                        factores.append(lang_dict['early_application'])
                     elif años_espera > 5:
-                        factores.append("⚠️ Varios años desde egreso")
+                        factores.append(lang_dict['late_application'])
 
                     for factor in factores:
                         st.write(factor)
 
                 # Generar PDF si se solicitó
                 if generar_pdf:
-                    st.markdown("---")
-                    st.subheader("📄 Generación de PDF")
+                    st.markdown(lang_dict['footer'])
+                    st.subheader(lang_dict['pdf_generation'])
                     
                     try:
                         # Usar la predicción ya calculada
@@ -387,7 +497,7 @@ with st.form("formulario_prediccion"):
                         filename = f"prediccion_ingreso_{timestamp}.pdf"
                         
                         # Mostrar enlace de descarga
-                        st.success("✅ PDF generado exitosamente!")
+                        st.success(lang_dict['pdf_success'])
                         st.markdown(get_pdf_download_link(pdf_path, filename), unsafe_allow_html=True)
                         
                         # Limpiar archivo temporal
@@ -397,26 +507,26 @@ with st.form("formulario_prediccion"):
                             pass
                             
                     except Exception as e:
-                        st.error(f"❌ Error al generar PDF: {e}")
+                        st.error(lang_dict['pdf_error'].format(e=e))
 
                 # Mostrar resumen de datos
-                st.markdown("---")
-                st.subheader("📋 Resumen de Datos")
+                st.markdown(lang_dict['footer'])
+                st.subheader(lang_dict['data_summary'])
 
-                df_resumen = pd.DataFrame([
-                    ["Año de Nacimiento", str(año_nacimiento)],
-                    ["Sexo", str(sexo)],
-                    ["Colegio", str(colegio)],
-                    ["Año de Egreso", str(año_egreso)],
-                    ["Especialidad", str(especialidad)],
-                    ["Año de Postulación", str(año_postulacion)],
-                    ["Ciclo", str(ciclo)],
-                    ["Modalidad", str(modalidad)],
-                    ["Calificación Final", f"{calificacion_final:.1f}"]
-                ], columns=["Campo", "Valor"])
-
-                # Ensure all values are strings to avoid PyArrow conversion issues
-                df_resumen = df_resumen.astype(str)
+                df_resumen = pd.DataFrame.from_records(
+                    [
+                        [lang_dict['year_of_birth'], str(año_nacimiento)],
+                        [lang_dict['sex'], str(sexo)],
+                        [lang_dict['school_name'], str(colegio)],
+                        [lang_dict['year_of_graduation'], str(año_egreso)],
+                        [lang_dict['university_specialty'], str(especialidad)],
+                        [lang_dict['year_of_application'], str(año_postulacion)],
+                        [lang_dict['cycle'], str(ciclo)],
+                        [lang_dict['application_mode'], str(modalidad)],
+                        [lang_dict['final_grade'], f"{calificacion_final:.1f}"]
+                    ],
+                    columns=("Campo", "Valor")
+                )
                 
                 try:
                     # Use table instead of dataframe to avoid PyArrow issues
@@ -428,24 +538,17 @@ with st.form("formulario_prediccion"):
                         st.write(f"• **{row['Campo']}:** {row['Valor']}")
 
 # Sidebar con información
-st.sidebar.header("ℹ️ Información del Modelo")
-st.sidebar.markdown(f"""
-**Modelo:** {type(model).__name__}\n
-**R² Score:** 86.31%\n
-**Precisión:** 91.97%\n
-**Características:** 9 variables\n
-
-**Mejor modelo entrenado con datos reales**
-""")
+st.sidebar.header(lang_dict['sidebar_info'])
+st.sidebar.markdown(lang_dict['sidebar_model'].format(model=type(model).__name__))
 
 # Botón para descargar el reporte de entrenamiento
 with open("reporte.pdf", "rb") as f:
     st.sidebar.download_button(
-        label="📄 Descargar Reporte de Entrenamiento",
+        label=lang_dict['sidebar_report'],
         data=f,
         file_name="reporte.pdf",
         mime="application/pdf"
     )
 
 # Footer
-st.markdown("---")
+st.markdown(lang_dict['footer'])
