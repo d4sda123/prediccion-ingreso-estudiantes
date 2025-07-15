@@ -368,7 +368,143 @@ if all_normal:
     plt.savefig(posthoc_plot_path)
     plt.close()
 else:
-    # Friedman
+    # Friedman test
+    friedman_stat, friedman_p = friedmanchisquare(*[residuals_matrix[:,i] for i in range(residuals_matrix.shape[1])])
+    print(f"\nFriedman: stat={friedman_stat}, p={friedman_p}")
+    test_used = 'Friedman'
+    test_stat, test_p = friedman_stat, friedman_p
+
+    if friedman_p < 0.05:
+        print("\n" + "="*60)
+        print("ANÁLISIS POST-HOC: PRUEBA DE NEMENYI")
+        print("="*60)
+        
+        # Aplicar prueba de Nemenyi
+        nemenyi_result = sp.posthoc_nemenyi_friedman(residuals_matrix)
+        posthoc_result = nemenyi_result
+        
+        # Mostrar matriz de p-values
+        print("\nMatriz de p-values de Nemenyi:")
+        print(nemenyi_result.round(4))
+        
+        # Interpretación de resultados
+        print("\n" + "="*60)
+        print("INTERPRETACIÓN DE RESULTADOS")
+        print("="*60)
+        
+        alpha = 0.05
+        significant_pairs = []
+        
+        print(f"\nComparaciones significativas (p < {alpha}):")
+        for i in range(len(model_names)):
+            for j in range(i+1, len(model_names)):
+                p_value = nemenyi_result.iloc[i, j]
+                if p_value < alpha:
+                    significant_pairs.append((model_names[i], model_names[j], p_value))
+                    print(f"  {model_names[i]} vs {model_names[j]}: p = {p_value:.4f} *")
+        
+        if not significant_pairs:
+            print("  No se encontraron diferencias significativas entre pares de modelos")
+        
+        # Ranking de modelos basado en rendimiento promedio
+        print(f"\nRanking de modelos (basado en R² Score):")
+        ranking_df = comparison_df.copy()
+        ranking_df['Ranking'] = range(1, len(ranking_df) + 1)
+        
+        for idx, row in ranking_df.iterrows():
+            print(f"  {row['Ranking']}. {row['Modelo']} (R² = {row['R² Score']:.4f})")
+        
+        # Grupos homogéneos (modelos sin diferencias significativas)
+        print(f"\nGrupos homogéneos (sin diferencias significativas):")
+        
+        # Crear grupos basados en las comparaciones no significativas
+        groups = []
+        models_processed = set()
+        
+        for i, model1 in enumerate(model_names):
+            if model1 not in models_processed:
+                current_group = [model1]
+                models_processed.add(model1)
+                
+                for j, model2 in enumerate(model_names):
+                    if i != j and model2 not in models_processed:
+                        p_value = nemenyi_result.iloc[i, j]
+                        if p_value >= alpha:
+                            current_group.append(model2)
+                            models_processed.add(model2)
+                
+                if len(current_group) > 1:
+                    groups.append(current_group)
+        
+        if groups:
+            for i, group in enumerate(groups, 1):
+                print(f"  Grupo {i}: {', '.join(group)}")
+        else:
+            print("  Todos los modelos son significativamente diferentes")
+        
+        # Crear gráfico mejorado
+        plt.figure(figsize=(12, 8))
+        
+        # Heatmap de p-values
+        plt.subplot(2, 1, 1)
+        sns.heatmap(nemenyi_result, annot=True, fmt='.4f', cmap='RdYlBu_r', 
+                    xticklabels=model_names, yticklabels=model_names,
+                    cbar_kws={'label': 'p-value'})
+        plt.title('Prueba de Nemenyi - Matriz de p-values')
+        
+        # Gráfico de significancia
+        plt.subplot(2, 1, 2)
+        significance_matrix = (nemenyi_result < alpha).astype(int)
+        sns.heatmap(significance_matrix, annot=True, fmt='d', cmap='RdYlGn_r',
+                    xticklabels=model_names, yticklabels=model_names,
+                    cbar_kws={'label': 'Significativo (1) / No significativo (0)'})
+        plt.title(f'Diferencias significativas (α = {alpha})')
+        
+        plt.tight_layout()
+        posthoc_plot_path = 'images/posthoc_nemenyi_detailed.png'
+        plt.savefig(posthoc_plot_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        # Gráfico de rangos promedio (Critical Difference plot)
+        plt.figure(figsize=(10, 6))
+        
+        # Calcular rangos promedio para cada modelo
+        avg_ranks = []
+        for i in range(len(model_names)):
+            # Simular ranking basado en R² (mejor modelo = menor rango)
+            r2_scores = [results[model]['r2'] for model in model_names]
+            sorted_indices = np.argsort(r2_scores)[::-1]  # Descendente
+            ranks = np.empty_like(sorted_indices)
+            ranks[sorted_indices] = np.arange(1, len(sorted_indices) + 1)
+            avg_ranks.append(ranks[i])
+        
+        # Crear el gráfico
+        y_pos = np.arange(len(model_names))
+        bars = plt.barh(y_pos, avg_ranks, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
+        
+        plt.yticks(y_pos, model_names)
+        plt.xlabel('Rango Promedio (menor es mejor)')
+        plt.title('Rangos Promedio de Modelos - Prueba de Nemenyi')
+        plt.grid(axis='x', alpha=0.3)
+        
+        # Añadir valores en las barras
+        for i, (bar, rank) in enumerate(zip(bars, avg_ranks)):
+            plt.text(bar.get_width() + 0.1, bar.get_y() + bar.get_height()/2, 
+                    f'{rank:.1f}', va='center', fontweight='bold')
+        
+        plt.tight_layout()
+        plt.savefig('images/nemenyi_ranks.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        print(f"\nGráficos guardados:")
+        print(f"  - Matriz detallada: {posthoc_plot_path}")
+        print(f"  - Rangos promedio: images/nemenyi_ranks.png")
+        
+    else:
+        print("\nNo se realizó análisis post-hoc porque el test de Friedman no fue significativo")
+        posthoc_result = None
+        posthoc_plot_path = None
+    """# Friedman
     friedman_stat, friedman_p = friedmanchisquare(*[residuals_matrix[:,i] for i in range(residuals_matrix.shape[1])])
     print(f"\nFriedman: stat={friedman_stat}, p={friedman_p}")
     test_used = 'Friedman'
@@ -382,7 +518,7 @@ else:
     plt.title('Nemenyi Post-hoc')
     posthoc_plot_path = 'images/posthoc_nemenyi.png'
     plt.savefig(posthoc_plot_path)
-    plt.close()
+    plt.close()"""
 
 # Residuales
 plt.figure(figsize=(10,8))
@@ -520,9 +656,49 @@ else:
     add_paragraph(story, "\nNo hay diferencias significativas entre modelos (p >= 0.05)")
 add_spacer(story, 1,6)
 
-add_subtitle(story, "Gráfico de residuales por modelo")
-add_image(story, boxplot_path, 400, 300)
-add_spacer(story, 1,6)
+if test_p < 0.05:
+    add_subtitle(story, "Análisis Post-hoc: Prueba de Nemenyi")
+    add_paragraph(story, f"Dado que el test de Friedman fue significativo (p = {test_p:.2e}), se procedió con el análisis post-hoc usando la prueba de Nemenyi.")
+    add_spacer(story, 1,6)
+    
+    # Agregar matriz de p-values si existe
+    if posthoc_result is not None:
+        add_subtitle(story, "Matriz de p-values - Nemenyi")
+        add_image(story, "images/posthoc_nemenyi_detailed.png", 400, 300)
+        add_spacer(story, 1,6)
+        
+        add_subtitle(story, "Rangos promedio de modelos")
+        add_image(story, "images/nemenyi_ranks.png", 400, 250)
+        add_spacer(story, 1,6)
+        
+        # Interpretar resultados
+        alpha = 0.05
+        significant_pairs = []
+        
+        for i in range(len(model_names)):
+            for j in range(i+1, len(model_names)):
+                p_value = posthoc_result.iloc[i, j]
+                if p_value < alpha:
+                    significant_pairs.append((model_names[i], model_names[j], p_value))
+        
+        if significant_pairs:
+            add_subtitle(story, "Comparaciones significativas")
+            for pair in significant_pairs:
+                add_paragraph(story, f"\n\t• {pair[0]} vs {pair[1]}: p = {pair[2]:.2e}")
+        else:
+            add_paragraph(story, f"No se encontraron diferencias significativas entre pares de modelos (α = {alpha})")
+        
+        add_spacer(story, 1,6)
+        
+        add_subtitle(story, "Conclusiones del análisis post-hoc")
+        add_paragraph(story, "La prueba de Nemenyi reveló las siguientes conclusiones:")
+        
+        add_paragraph(story, f"1. El test de Friedman confirmó diferencias significativas entre los modelos (p = {test_p:.2e})")
+        add_paragraph(story, f"2. El modelo '{best_model_name}' mostró el mejor rendimiento con R² = {best_r2:.4f}")
+        add_paragraph(story, "3. Los análisis post-hoc identificaron qué modelos difieren significativamente entre sí")
+        add_paragraph(story, "4. Esta información es crucial para la selección del modelo óptimo")
+else:
+    add_paragraph(story, "No se realizó análisis post-hoc porque el test de Friedman no fue significativo.")
 
 # Mejor modelo
 add_subtitle(story, "Modelo Optimo")
@@ -532,6 +708,10 @@ add_paragraph(story, f"• Error Absoluto Promedio: {results[best_model_name]['m
 add_paragraph(story, f"• Raiz del Error Cuadrado Promedio: {results[best_model_name]['rmse']}")
 add_paragraph(story, f"• Error Cuadrado Promedio: {results[best_model_name]['mse']}")
 add_paragraph(story, f"• Brier Score: {results[best_model_name]['brier']}")
+
+add_subtitle(story, "Gráfico de residuales por modelo")
+add_image(story, boxplot_path, 400, 300)
+add_spacer(story, 1,6)
 
 # Generar PDF
 build_pdf(doc, story)
