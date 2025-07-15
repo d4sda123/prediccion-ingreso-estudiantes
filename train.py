@@ -5,7 +5,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import joblib
 import os
-import pingouin as pg
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle

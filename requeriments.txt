@@ -5,4 +5,3 @@ reportlab
 joblib
 scikit-learn
 scikit_posthocs
-pingouin
