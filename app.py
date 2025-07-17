@@ -58,7 +58,8 @@ LANG_DICT = {
         'footer': "---",
         'language': "Idioma",
         'spanish': "Español",
-        'english': "Inglés"
+        'english': "Inglés",
+        'pdf_download': "Descargar PDF"
     },
     'en': {
         'main_title': "🎓 University Admission Predictor",
@@ -107,20 +108,61 @@ LANG_DICT = {
         'footer': "---",
         'language': "Language",
         'spanish': "Spanish",
-        'english': "English"
+        'english': "English",
+        'pdf_download': "Download PDF"
     }
 }
+
+# Import additional languages
+from languages import additional_languages, get_all_supported_languages, get_language_name
+from option_translations import (get_translated_schools, get_translated_specialties, 
+                                get_translated_application_modes, get_original_value,
+                                SCHOOL_TRANSLATIONS, SPECIALTY_TRANSLATIONS, APPLICATION_MODE_TRANSLATIONS)
+
+# Merge additional languages into LANG_DICT
+LANG_DICT.update(additional_languages)
+
+# Add missing keys to Spanish and English dictionaries
+LANG_DICT['es']['value'] = 'Valor'
+LANG_DICT['en']['value'] = 'Value'
+LANG_DICT['es']['french'] = 'Francés'
+LANG_DICT['es']['german'] = 'Alemán'
+LANG_DICT['es']['italian'] = 'Italiano'
+LANG_DICT['es']['portuguese'] = 'Portugués'
+LANG_DICT['es']['russian'] = 'Ruso'
+LANG_DICT['es']['chinese'] = 'Chino'
+LANG_DICT['es']['japanese'] = 'Japonés'
+LANG_DICT['en']['french'] = 'French'
+LANG_DICT['en']['german'] = 'German'
+LANG_DICT['en']['italian'] = 'Italian'
+LANG_DICT['en']['portuguese'] = 'Portuguese'
+LANG_DICT['en']['russian'] = 'Russian'
+LANG_DICT['en']['chinese'] = 'Chinese'
+LANG_DICT['en']['japanese'] = 'Japanese'
 
 # Language selection (persist in session state)
 if 'lang' not in st.session_state:
     st.session_state['lang'] = 'es'
+
+# Get current language for selector label
+current_lang_dict = LANG_DICT.get(st.session_state['lang'], LANG_DICT['es'])
+
+# Define callback for language change
+def on_language_change():
+    st.session_state['lang'] = st.session_state['lang_selector']
+
 lang = st.sidebar.selectbox(
-    LANG_DICT[st.session_state['lang']]['language'],
-    options=['es', 'en'],
-    format_func=lambda x: LANG_DICT[x]['spanish'] if x == 'es' else LANG_DICT[x]['english'],
-    key='lang'
+    current_lang_dict['language'],
+    options=get_all_supported_languages(),
+    format_func=lambda x: get_language_name(x),
+    index=get_all_supported_languages().index(st.session_state['lang']),
+    key='lang_selector',
+    on_change=on_language_change
 )
-lang_dict = LANG_DICT[st.session_state['lang']]
+
+# Update session state
+st.session_state['lang'] = lang
+lang_dict = LANG_DICT[lang]
 
 # Configuración de la página
 st.set_page_config(
@@ -160,7 +202,7 @@ def preprocesar_datos(datos, label_encoders):
     data_df = pd.DataFrame({
         'COLEGIO_ANIO_EGRESO': [datos['año_egreso']],
         'ANIO_POSTULA': [datos['año_postulacion']],
-        'CICLO_POSTULA': [1 if datos['ciclo'] == 'I Ciclo' else 2],
+        'CICLO_POSTULA': [1 if datos['ciclo'] in ['I Ciclo', 'I Cycle', 'I Zyklus', 'I Ciclo', 'I Cycle', '第一周期', '第一周期', '第Iサイクル', 'I Цикл'] else 2],
         'ANIO_NACIMIENTO': [datos['año_nacimiento']],
         'CALIF_FINAL': [datos['calificacion_final']],
         'COLEGIO': [datos['colegio']],
@@ -210,26 +252,28 @@ def generar_pdf_formulario(datos, prediccion):
     Genera un PDF con los datos del formulario y la predicción
     """
     
+    lang_dict = LANG_DICT[st.session_state['lang']]
+
     # Crear PDF
     doc, story = create_pdf("reporte_prediccion")
     
     # Título principal
-    add_title(story, "Predictor de Ingreso Universitario")
+    add_title(story, lang_dict['main_title'])
     add_spacer(story, 1, 12)
     
     # Información del estudiante
-    add_subtitle(story, "Información del Estudiante")
+    add_subtitle(story, lang_dict['student_info'])
     datos_tabla = [
-        ["Campo", "Valor"],
-        ["Año de Nacimiento", str(datos['año_nacimiento'])],
-        ["Sexo", str(datos['sexo'])],
-        ["Colegio", str(datos['colegio'])],
-        ["Año de Egreso", str(datos['año_egreso'])],
-        ["Especialidad", str(datos['especialidad'])],
-        ["Año de Postulación", str(datos['año_postulacion'])],
-        ["Ciclo", str(datos['ciclo'])],
-        ["Modalidad", str(datos['modalidad'])],
-        ["Calificación Final", f"{datos['calificacion_final']:.1f}"]
+        [lang_dict['data_summary'], lang_dict['value']],
+        [lang_dict['year_of_birth'], str(datos['año_nacimiento'])],
+        [lang_dict['sex'], str(datos['sexo'])],
+        [lang_dict['school_name'], str(datos['colegio'])],
+        [lang_dict['year_of_graduation'], str(datos['año_egreso'])],
+        [lang_dict['university_specialty'], str(datos['especialidad'])],
+        [lang_dict['year_of_application'], str(datos['año_postulacion'])],
+        [lang_dict['cycle'], str(datos['ciclo'])],
+        [lang_dict['application_mode'], str(datos['modalidad'])],
+        [lang_dict['final_grade'], f"{datos['calificacion_final']:.1f}"]
     ]
     add_spacer(story, 1, 6)
     
@@ -240,24 +284,35 @@ def generar_pdf_formulario(datos, prediccion):
     
     # Resultado de predicción si existe
     if prediccion is not None:
-        add_subtitle(story, "Resultado de la Predicción")
+        add_subtitle(story, lang_dict['prediction_result'])
         
         prob_ingreso = prediccion * 100
-        resultado = "INGRESO PROBABLE" if prediccion > 0.5 else "INGRESO POCO PROBABLE"
+        resultado = lang_dict['likely_admission'] if prediccion > 0.5 else lang_dict['unlikely_admission']
         
-        add_paragraph(story, f"<b>Resultado:</b> {resultado}")
-        add_paragraph(story, f"<b>Probabilidad de Ingreso:</b> {prob_ingreso:.1f}%")
+        add_paragraph(story, f"<b>{lang_dict['prediction_result']}:</b> {resultado}")
+        add_paragraph(story, f"<b>{lang_dict['admission_probability']}:</b> {prob_ingreso:.1f}%")
         add_spacer(story, 1, 6)
     
     # Información del modelo
-    add_subtitle(story, "Información del Modelo")
-    add_paragraph(story, "• Modelo: Bosques Aleatorios")
-    add_paragraph(story, "• R² Score: 86.31%")
-    add_paragraph(story, "• Características: 9 variables")
+    add_subtitle(story, lang_dict['sidebar_info'])
+    add_paragraph(story, lang_dict['sidebar_model'].format(model='Random Forest'))
+    add_spacer(story, 1, 6)
     
     # Fecha de generación
     add_spacer(story, 1, 200)
-    add_paragraph(story, f"<i>Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</i>")
+    generation_text = {
+        'es': f"<i>Generado el: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</i>",
+        'en': f"<i>Generated on: {datetime.now().strftime('%m/%d/%Y %H:%M:%S')}</i>",
+        'fr': f"<i>Généré le: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</i>",
+        'de': f"<i>Generiert am: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</i>",
+        'it': f"<i>Generato il: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</i>",
+        'pt': f"<i>Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</i>",
+        'ru': f"<i>Создано: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}</i>",
+        'zh': f"<i>生成于: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}</i>",
+        'ja': f"<i>生成日時: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}</i>"
+    }
+    current_lang = st.session_state['lang']
+    add_paragraph(story, generation_text.get(current_lang, generation_text['es']))
     
     # Construir PDF
     build_pdf(doc, story)
@@ -268,10 +323,11 @@ def get_pdf_download_link(pdf_path, filename):
     """
     Genera un enlace de descarga para el PDF
     """
+    lang_dict = LANG_DICT[st.session_state['lang']]
     with open(pdf_path, "rb") as f:
         bytes = f.read()
         b64 = base64.b64encode(bytes).decode()
-        href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">Descargar PDF</a>'
+        href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">{lang_dict["pdf_download"]}</a>'
         return href
 
 # Crear el formulario
@@ -296,19 +352,7 @@ with st.form("formulario_prediccion"):
 
         colegio = st.selectbox(
             lang_dict['school_name'],
-            [
-                "LA DIVINA PROVIDENCIA",
-                "86019 LA LIBERTAD",
-                "0113 DANIEL ALOMIAS ROBLES",
-                "SEBASTIAN SALAZAR BONDY",
-                "TRILCE LOS OLIVOS",
-                "BARTOLOME HERRERA",
-                "FE Y ALEGRIA 59",
-                "CIENCIAS",
-                "SAN CARLOS",
-                "TRILCE SAN JUAN",
-                "OTRO"
-            ]
+            get_translated_schools(lang)
         )
 
         año_egreso = st.number_input(
@@ -322,18 +366,7 @@ with st.form("formulario_prediccion"):
     with col2:
         especialidad = st.selectbox(
             lang_dict['university_specialty'],
-            [
-                "INGENIERÍA DE SISTEMAS",
-                "INGENIERÍA DE TELECOMUNICACIONES", 
-                "INGENIERÍA MECÁNICA",
-                "INGENIERÍA ELECTRÓNICA",
-                "ARQUITECTURA",
-                "MEDICINA",
-                "DERECHO",
-                "ADMINISTRACIÓN",
-                "CONTABILIDAD",
-                "OTRO"
-            ]
+            get_translated_specialties(lang)
         )
 
         año_postulacion = st.number_input(
@@ -351,16 +384,7 @@ with st.form("formulario_prediccion"):
 
         modalidad = st.selectbox(
             lang_dict['application_mode'],
-            [
-                "ORDINARIO",
-                "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)",
-                "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE",
-                "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)",
-                "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI",
-                "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS",
-                "TALENTO BECA 18",
-                "INGRESO ESCOLAR NACIONAL"
-            ]
+            get_translated_application_modes(lang)
         )
 
     st.subheader(lang_dict['academic_performance'])
@@ -385,16 +409,16 @@ with st.form("formulario_prediccion"):
 
     # Procesamiento del formulario
     if predecir or generar_pdf:
-        # Recopilar datos
+        # Recopilar datos (convertir traducciones a valores originales)
         datos = {
             'año_nacimiento': año_nacimiento,
             'sexo': sexo,
-            'colegio': colegio,
+            'colegio': get_original_value(colegio, SCHOOL_TRANSLATIONS, lang),
             'año_egreso': año_egreso,
-            'especialidad': especialidad,
+            'especialidad': get_original_value(especialidad, SPECIALTY_TRANSLATIONS, lang),
             'año_postulacion': año_postulacion,
             'ciclo': ciclo,
-            'modalidad': modalidad,
+            'modalidad': get_original_value(modalidad, APPLICATION_MODE_TRANSLATIONS, lang),
             'calificacion_final': calificacion_final
         }
 
