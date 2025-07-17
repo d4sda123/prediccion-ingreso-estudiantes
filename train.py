@@ -26,6 +26,53 @@ ad_df = ad_df.drop(['IDHASH', 'COLEGIO_DEPA', 'COLEGIO_PROV', 'COLEGIO_DIST',
                     'DOMICILIO_DIST', 'NACIMIENTO_PAIS', 'NACIMIENTO_DEPA',
                     'NACIMIENTO_PROV', 'NACIMIENTO_DIST'], axis=1).dropna()
 
+# Plots de distribución de frecuencia para ESPECIALIDAD y MODALIDAD
+plt.figure(figsize=(10, 6))
+ad_df['ESPECIALIDAD'].value_counts().plot(kind='bar', color='skyblue')
+plt.title('Distribución de Frecuencia de ESPECIALIDAD')
+plt.xlabel('ESPECIALIDAD')
+plt.ylabel('Frecuencia')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.savefig('images/frecuencia_especialidad.png')
+plt.close()
+
+plt.figure(figsize=(8, 5))
+ad_df['MODALIDAD'].value_counts().plot(kind='bar', color='lightgreen')
+plt.title('Distribución de Frecuencia de MODALIDAD')
+plt.xlabel('MODALIDAD')
+plt.ylabel('Frecuencia')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.savefig('images/frecuencia_modalidad.png')
+plt.close()
+
+# Gráfico de dispersión para columnas numéricas
+numeric_cols = ad_df.select_dtypes(include=[np.number]).columns.tolist()
+if len(numeric_cols) > 1:
+    sns.pairplot(ad_df[numeric_cols])
+    plt.suptitle('Matriz de Dispersión de Variables Numéricas', y=1.02)
+    plt.savefig('images/dispersion_numericas.png')
+    plt.close()
+
+# Plots de medidas de tendencia central para columnas numéricas
+for col in numeric_cols:
+    plt.figure(figsize=(8, 5))
+    sns.histplot(ad_df[col].to_numpy(), kde=True, color='lightblue', bins=30)
+    mean = float(ad_df[col].mean())
+    median = float(ad_df[col].median())
+    mode = float(ad_df[col].mode().iloc[0]) if not ad_df[col].mode().empty else np.nan
+    plt.axvline(mean, color='red', linestyle='--', label=f'Media: {mean:.2f}')
+    plt.axvline(median, color='green', linestyle='-.', label=f'Mediana: {median:.2f}')
+    plt.axvline(mode, color='blue', linestyle=':', label=f'Moda: {mode:.2f}')
+    plt.title(f'Medidas de tendencia central - {col}')
+    plt.xlabel(col)
+    plt.ylabel('Frecuencia')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f'images/medidas_{col}.png')
+    plt.close()
+
 print("\n" + "="*60)
 print("ESTADÍSTICAS DESCRIPTIVAS")
 print("="*60+"\n")
@@ -117,7 +164,7 @@ results['Bosques Aleatorios'] = {
     'mse': mean_squared_error(y_test, rf_pred),
     'rmse': np.sqrt(mean_squared_error(y_test, rf_pred)),
     'mae': mean_absolute_error(y_test, rf_pred),
-    'brier': brier_score_loss(y_test, np.clip(rf_pred, 0, 1))
+    'brier': brier_score_loss(y_test, np.clip(rf_pred, 0, 1))   
 }
 
 print(f"R² Score: {results['Bosques Aleatorios']['r2']:.4f}")
@@ -293,12 +340,12 @@ plt.figure(figsize=(15, 5))
 
 plt.subplot(1, 3, 1)
 plt.barh(rf_importance['Feature'], rf_importance['Importance'])
-plt.title('Random Forest - Importancia')
+plt.title('Bosques Aleatorios - Importancia')
 plt.xlabel('Importancia')
 
 plt.subplot(1, 3, 2)
 plt.barh(gb_importance['Feature'], gb_importance['Importance'])
-plt.title('Gradient Boosting - Importancia')
+plt.title('Potenciación de Gradiente - Importancia')
 plt.xlabel('Importancia')
 
 plt.subplot(1, 3, 3)
@@ -625,6 +672,11 @@ add_subtitle(story, "Datos de entrenamiento y prueba")
 add_paragraph(story, f"Tamaño de conjunto de datos de entrenamiento: {train_length} ({train_size*100:.2f}%)")
 add_paragraph(story, f"Tamaño de conjunto de datos de prueba: {test_length} ({test_size*100:.2f}%)")
 add_spacer(story, 1,6)
+
+# Agregar coeficientes de regresión lineal al PDF
+add_subtitle(story, "Coeficientes de la Regresión Lineal")
+add_table(story, lr_coef)
+add_spacer(story, 1, 6)
 
 # Comparación de modelos
 add_subtitle(story, "Comparación R2")
