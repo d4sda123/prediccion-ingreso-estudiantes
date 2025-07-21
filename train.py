@@ -85,13 +85,16 @@ for col in columnas_categoricas:
 
 df = df_copy.copy()
 
+df['ingreso'] = df['G3'].apply(lambda x: 1 if x > 12 else 0)
+
 # Visualización de correlaciones
 plt.figure(figsize=(20, 12))
 sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm', center=0)
 plt.tight_layout()
 plt.savefig("images/matriz_correlacion.png")
 
-df['ingreso'] = df['G3'].apply(lambda x: 1 if x > 12 else 0)
+df = df.drop(['famsize', 'Pstatus', 'Fjob', 'guardian', 'schoolsup', 'famsup', 'paid', 'activities', 'nursery', 'romantic', 'famrel', 'freetime', 'goout'], axis=1)
+
 train_size = 0.8
 test_size = 1 - train_size
 
