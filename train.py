@@ -12,8 +12,10 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, b
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.svm import SVR
+from xgboost import XGBRegressor
+from lightgbm import LGBMRegressor
 from make_pdf import create_pdf, build_pdf, add_title, add_subtitle, add_paragraph, add_spacer, add_list, add_image, add_table
-from scipy.stats import shapiro, kstest, f_oneway, friedmanchisquare, wilcoxon
+from scipy.stats import shapiro, kstest, f_oneway, friedmanchisquare
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import scikit_posthocs as sp
 
@@ -219,6 +221,52 @@ print(f"RMSE: {results['Potenciación de Gradiente']['rmse']:.4f}")
 print(f"MAE: {results['Potenciación de Gradiente']['mae']:.4f}")
 print(f"Brier Score: {results['Potenciación de Gradiente']['brier']:.4f}")
 
+# 5. XGBoost
+print("\n5. XGBoost:")
+xgb = XGBRegressor(n_estimators=100, random_state=42, verbosity=0)
+xgb.fit(X_train, y_train)
+xgb_pred = xgb.predict(X_test)
+
+models['XGBoost'] = xgb
+results['XGBoost'] = {
+    'y_real': y_test,
+    'y_pred': xgb_pred,
+    'r2': r2_score(y_test, xgb_pred),
+    'mse': mean_squared_error(y_test, xgb_pred),
+    'rmse': np.sqrt(mean_squared_error(y_test, xgb_pred)),
+    'mae': mean_absolute_error(y_test, xgb_pred),
+    'brier': brier_score_loss(y_test, np.clip(xgb_pred, 0, 1))
+}
+
+print(f"R² Score: {results['XGBoost']['r2']:.4f}")
+print(f"MSE: {results['XGBoost']['mse']:.4f}")
+print(f"RMSE: {results['XGBoost']['rmse']:.4f}")
+print(f"MAE: {results['XGBoost']['mae']:.4f}")
+print(f"Brier Score: {results['XGBoost']['brier']:.4f}")
+
+# 6. LightGBM
+print("\n6. LightGBM:")
+lgbm = LGBMRegressor(n_estimators=100, random_state=42)
+lgbm.fit(X_train, y_train)
+lgbm_pred = lgbm.predict(X_test)
+
+models['LightGBM'] = lgbm
+results['LightGBM'] = {
+    'y_real': y_test,
+    'y_pred': lgbm_pred,
+    'r2': r2_score(y_test, lgbm_pred),
+    'mse': mean_squared_error(y_test, lgbm_pred),
+    'rmse': np.sqrt(mean_squared_error(y_test, lgbm_pred)),
+    'mae': mean_absolute_error(y_test, lgbm_pred),
+    'brier': brier_score_loss(y_test, np.clip(lgbm_pred, 0, 1))
+}
+
+print(f"R² Score: {results['LightGBM']['r2']:.4f}")
+print(f"MSE: {results['LightGBM']['mse']:.4f}")
+print(f"RMSE: {results['LightGBM']['rmse']:.4f}")
+print(f"MAE: {results['LightGBM']['mae']:.4f}")
+print(f"Brier Score: {results['LightGBM']['brier']:.4f}")
+
 # TABLA COMPARATIVA DE RESULTADOS
 print("\n" + "="*60)
 print("COMPARACIÓN DE RESULTADOS")
@@ -354,212 +402,225 @@ plt.title('Regresión Lineal - Coeficientes')
 plt.xlabel('Coeficiente')
 plt.tight_layout()
 
-# NORMALITY TESTS (Shapiro-Wilk and Kolmogorov-Smirnov)
-print("\n" + "="*60)
-print("TESTS DE NORMALIDAD DE RESIDUALES")
-print("="*60)
-
-normality_tests = []
-for model_name in results.keys():
-    residuals = y_test - results[model_name]['y_pred']
-    if len(residuals) <= 50:
-        stat, p = shapiro(residuals)
-        test = 'Shapiro-Wilk'
-    else:
-        stat, p = kstest(residuals, 'norm', args=(np.mean(residuals), np.std(residuals)))
-        test = 'Kolmogorov-Smirnov'
-        
-    normality_tests.append({
-        'model_name': model_name,
-        'stat': stat,
-        'p': p,
-        'test': test
-    })
-    print(f"\nModelo: {model_name}")
-    print(f"  {test}: stat={stat}, p={p}")
-
-normality_df = pd.DataFrame(normality_tests)
-
-# Determinar si los modelos pasan normalidad (p > 0.05)
-all_normal = all(normality_df['p'] > 0.05)
-
-# Prueba ANOVA o Friedman
-print("\n" + "="*60)
-print("COMPARACIÓN DE MODELOS: ANOVA o FRIEDMAN")
-print("="*60)
-
-residuals_list = [results[m]['y_pred'] - results[m]['y_real'] for m in results.keys()]
-residuals_matrix = np.column_stack(residuals_list)
-model_names = list(results.keys())
-
 posthoc_result = None
 posthoc_plot_path = None
 
-if all_normal:
-    # ANOVA
-    anova_stat, anova_p = f_oneway(*residuals_list)
-    print(f"\nANOVA: stat={anova_stat}, p={anova_p}")
+# CORRECCIÓN DE LA COMPARACIÓN DE MODELOS
+# En lugar de usar residuales, usar métricas de rendimiento
+# Crear una matriz donde cada fila es una observación y cada columna es un modelo
+print("\n" + "="*60)
+print("COMPARACIÓN DE MODELOS CORREGIDA: ANOVA o FRIEDMAN")
+print("="*60)
+# Si quieres usar métricas agregadas, necesitas repetir el experimento
+# con diferentes splits o usar bootstrap para generar múltiples muestras
+# Para una comparación más robusta, usemos bootstrap
+from sklearn.utils import resample
+
+n_bootstrap = 51  # Número de muestras bootstrap
+bootstrap_scores = {model: [] for model in results.keys()}
+
+print("Realizando bootstrap para obtener múltiples muestras...")
+for i in range(n_bootstrap):
+    # Crear muestra bootstrap
+    X_boot, y_boot = resample(X_test, y_test, random_state=i)
+    
+    # Evaluar cada modelo en la muestra bootstrap
+    for model_name in results.keys():
+        model = models[model_name]
+        
+        if model_name in ['Regresión Lineal', 'Regresión de Vectores de Soporte']:
+            # Modelos que necesitan datos escalados
+            X_boot_scaled = ss.transform(X_boot)
+            y_pred_boot = model.predict(X_boot_scaled)
+        else:
+            # Modelos que no necesitan escalado
+            y_pred_boot = model.predict(X_boot)
+        
+        # Calcular R²
+        r2_boot = r2_score(y_boot, y_pred_boot)
+        bootstrap_scores[model_name].append(r2_boot)
+
+# Convertir a matriz para las pruebas estadísticas
+bootstrap_matrix = np.array([bootstrap_scores[model] for model in results.keys()]).T
+model_names = list(results.keys())
+
+print(f"Matriz bootstrap creada: {bootstrap_matrix.shape}")
+print("Estadísticas bootstrap por modelo:")
+for i, model in enumerate(model_names):
+    mean_score = np.mean(bootstrap_matrix[:, i])
+    std_score = np.std(bootstrap_matrix[:, i])
+    print(f"  {model}: Media R² = {mean_score} ± {std_score}")
+
+# Prueba de normalidad en las muestras bootstrap
+from scipy.stats import shapiro, kstest
+print("\nTest de normalidad en muestras bootstrap:")
+bootstrap_normal = []
+for i, model in enumerate(model_names):
+    if len(bootstrap_matrix[:, i]) <= 50:
+        stat, p = shapiro(bootstrap_matrix[:, i])
+        test = 'Shapiro-Wilk'
+    else:
+        stat, p = kstest(bootstrap_matrix[:, i], 'norm')
+        test = 'Kolmogorov-Smirnov'
+    
+    bootstrap_normal.append(p > 0.05)
+    print(f"  {model} - {test}: stat={stat}, p={p}")
+
+all_bootstrap_normal = all(bootstrap_normal)
+print(f"\nTodas las muestras bootstrap son normales: {all_bootstrap_normal}")
+
+# Aplicar el test apropiado
+if all_bootstrap_normal:
+    # ANOVA si todas las muestras son normales
+    from scipy.stats import f_oneway
+    anova_stat, anova_p = f_oneway(*[bootstrap_matrix[:, i] for i in range(len(model_names))])
+    print(f"\nANOVA en muestras bootstrap:")
+    print(f"  F-statistic: {anova_stat}")
+    print(f"  p-value: {anova_p}")
+    
     test_used = 'ANOVA'
     test_stat, test_p = anova_stat, anova_p
-    # Post-hoc: Tukey HSD
-    stacked_residuals = np.concatenate(residuals_list)
-    group_labels = np.concatenate([[name]*len(residuals_list[0]) for name in model_names])
-    tukey = pairwise_tukeyhsd(stacked_residuals, group_labels)
-    posthoc_result = pd.DataFrame(data=tukey._results_table.data[1:], columns=tukey._results_table.data[0])
-    # Plot
-    plt.figure(figsize=(15,9))
-    sp.sign_plot(posthoc_result['reject'].astype(float).values.reshape(len(model_names),-1), model_names)
-    plt.title('Tukey HSD Post-hoc')
-    posthoc_plot_path = 'images/posthoc_tukey.png'
-    plt.savefig(posthoc_plot_path)
-    plt.close()
+    
+    # Post-hoc: Tukey HSD si hay diferencias significativas
+    if anova_p < 0.05:
+        from statsmodels.stats.multicomp import pairwise_tukeyhsd
+        
+        # Preparar datos para Tukey
+        stacked_scores = bootstrap_matrix.flatten()
+        group_labels = np.repeat(model_names, n_bootstrap)
+        
+        tukey_result = pairwise_tukeyhsd(stacked_scores, group_labels, alpha=0.05)
+        print(f"\nPost-hoc Tukey HSD:")
+        print(tukey_result)
+        
+        posthoc_result = pd.DataFrame(data=tukey_result._results_table.data[1:], 
+                                    columns=tukey_result._results_table.data[0])
+        
 else:
-    # Friedman test
-    friedman_stat, friedman_p = friedmanchisquare(*[residuals_matrix[:,i] for i in range(residuals_matrix.shape[1])])
-    print(f"\nFriedman: stat={friedman_stat}, p={friedman_p}")
+    # Friedman si no todas las muestras son normales
+    from scipy.stats import friedmanchisquare
+    friedman_stat, friedman_p = friedmanchisquare(*[bootstrap_matrix[:, i] for i in range(len(model_names))])
+    print(f"\nTest de Friedman en muestras bootstrap:")
+    print(f"  Chi-square: {friedman_stat}")
+    print(f"  p-value: {friedman_p}")
+    
     test_used = 'Friedman'
     test_stat, test_p = friedman_stat, friedman_p
-
+    
+    # Post-hoc: Nemenyi si hay diferencias significativas
     if friedman_p < 0.05:
-        print("\n" + "="*60)
-        print("ANÁLISIS POST-HOC: PRUEBA DE NEMENYI")
-        print("="*60)
+        import scikit_posthocs as sp
         
-        # Aplicar prueba de Nemenyi
-        nemenyi_result = sp.posthoc_nemenyi_friedman(residuals_matrix)
-        posthoc_result = nemenyi_result
+        # Usar la función correcta con los datos bootstrap
+        nemenyi_result = sp.posthoc_nemenyi_friedman(bootstrap_matrix)
         
-        # Mostrar matriz de p-values
-        print("\nMatriz de p-values de Nemenyi:")
+        print(f"\nPost-hoc Nemenyi:")
+        print("Matriz de p-values:")
+        nemenyi_result.index = model_names
+        nemenyi_result.columns = model_names
         print(nemenyi_result.round(4))
         
-        # Interpretación de resultados
-        print("\n" + "="*60)
-        print("INTERPRETACIÓN DE RESULTADOS")
-        print("="*60)
+        # Verificar que los p-values están en el rango correcto
+        max_p = nemenyi_result.max().max()
+        min_p = nemenyi_result.min().min()
+        print(f"\nRango de p-values: [{min_p}, {max_p}]")
         
+        if max_p > 1.0 or min_p < 0.0:
+            print("⚠  ERROR: P-values fuera del rango válido [0, 1]")
+        else:
+            print("✅ P-values en el rango válido [0, 1]")
+        
+        posthoc_result = nemenyi_result
+        
+        # Interpretación de resultados
         alpha = 0.05
+        print(f"\nComparaciones significativas (p < {alpha}):")
         significant_pairs = []
         
-        print(f"\nComparaciones significativas (p < {alpha}):")
         for i in range(len(model_names)):
             for j in range(i+1, len(model_names)):
                 p_value = nemenyi_result.iloc[i, j]
                 if p_value < alpha:
                     significant_pairs.append((model_names[i], model_names[j], p_value))
-                    print(f"  {model_names[i]} vs {model_names[j]}: p = {p_value:.4f} *")
+                    print(f"  {model_names[i]} vs {model_names[j]}: p = {p_value} *")
         
         if not significant_pairs:
             print("  No se encontraron diferencias significativas entre pares de modelos")
-        
-        # Ranking de modelos basado en rendimiento promedio
-        print(f"\nRanking de modelos (basado en R² Score):")
-        ranking_df = comparison_df.copy()
-        ranking_df['Ranking'] = range(1, len(ranking_df) + 1)
-        
-        for idx, row in ranking_df.iterrows():
-            print(f"  {row['Ranking']}. {row['Modelo']} (R² = {row['R² Score']:.4f})")
-        
-        # Grupos homogéneos (modelos sin diferencias significativas)
-        print(f"\nGrupos homogéneos (sin diferencias significativas):")
-        
-        # Crear grupos basados en las comparaciones no significativas
-        groups = []
-        models_processed = set()
-        
-        for i, model1 in enumerate(model_names):
-            if model1 not in models_processed:
-                current_group = [model1]
-                models_processed.add(model1)
-                
-                for j, model2 in enumerate(model_names):
-                    if i != j and model2 not in models_processed:
-                        p_value = nemenyi_result.iloc[i, j]
-                        if p_value >= alpha:
-                            current_group.append(model2)
-                            models_processed.add(model2)
-                
-                if len(current_group) > 1:
-                    groups.append(current_group)
-        
-        if groups:
-            for i, group in enumerate(groups, 1):
-                print(f"  Grupo {i}: {', '.join(group)}")
-        else:
-            print("  Todos los modelos son significativamente diferentes")
-        
-        # Crear gráfico mejorado
-        plt.figure(figsize=(12, 8))
-        
-        # Heatmap de p-values
-        plt.subplot(2, 1, 1)
-        sns.heatmap(nemenyi_result, annot=True, fmt='.4f', cmap='RdYlBu_r', 
-                    xticklabels=model_names, yticklabels=model_names,
-                    cbar_kws={'label': 'p-value'})
-        plt.title('Prueba de Nemenyi - Matriz de p-values')
-        
-        # Gráfico de significancia
-        plt.subplot(2, 1, 2)
-        significance_matrix = (nemenyi_result < alpha).astype(int)
-        sns.heatmap(significance_matrix, annot=True, fmt='d', cmap='RdYlGn_r',
-                    xticklabels=model_names, yticklabels=model_names,
-                    cbar_kws={'label': 'Significativo (1) / No significativo (0)'})
-        plt.title(f'Diferencias significativas (α = {alpha})')
-        
-        plt.tight_layout()
-        posthoc_plot_path = 'images/posthoc_nemenyi_detailed.png'
-        plt.savefig(posthoc_plot_path, dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        # Gráfico de rangos promedio (Critical Difference plot)
-        plt.figure(figsize=(10, 6))
-        
-        # Calcular rangos promedio para cada modelo
-        avg_ranks = []
-        for i in range(len(model_names)):
-            # Simular ranking basado en R² (mejor modelo = menor rango)
-            r2_scores = [results[model]['r2'] for model in model_names]
-            sorted_indices = np.argsort(r2_scores)[::-1]  # Descendente
-            ranks = np.empty_like(sorted_indices)
-            ranks[sorted_indices] = np.arange(1, len(sorted_indices) + 1)
-            avg_ranks.append(ranks[i])
-        
-        # Crear el gráfico
-        y_pos = np.arange(len(model_names))
-        bars = plt.barh(y_pos, avg_ranks, color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
-        
-        plt.yticks(y_pos, model_names)
-        plt.xlabel('Rango Promedio (menor es mejor)')
-        plt.title('Rangos Promedio de Modelos - Prueba de Nemenyi')
-        plt.grid(axis='x', alpha=0.3)
-        
-        # Añadir valores en las barras
-        for i, (bar, rank) in enumerate(zip(bars, avg_ranks)):
-            plt.text(bar.get_width() + 0.1, bar.get_y() + bar.get_height()/2, 
-                    f'{rank:.1f}', va='center', fontweight='bold')
-        
-        plt.tight_layout()
-        plt.savefig('images/nemenyi_ranks.png', dpi=300, bbox_inches='tight')
-        plt.close()
-        
-        print(f"\nGráficos guardados:")
-        print(f"  - Matriz detallada: {posthoc_plot_path}")
-        print(f"  - Rangos promedio: images/nemenyi_ranks.png")
-        
-    else:
-        print("\nNo se realizó análisis post-hoc porque el test de Friedman no fue significativo")
-        posthoc_result = None
-        posthoc_plot_path = None
 
-# Residuales
-plt.figure(figsize=(10,8))
-plt.boxplot(residuals_list, tick_labels=model_names)
-plt.title('Boxplot de residuales por modelo')
-plt.ylabel('Residuales')
+# Visualización de los resultados bootstrap
+plt.figure(figsize=(5, 6))
+plt.boxplot([bootstrap_matrix[:, i] for i in range(len(model_names))], 
+           tick_labels=model_names)
+plt.title('Distribución R² Bootstrap por Modelo')
+plt.ylabel('R² Score')
+plt.xticks(rotation=45)
+plt.grid(axis='y', alpha=0.3)
 plt.tight_layout()
-boxplot_path = 'images/boxplot_residuales.png'
-plt.savefig(boxplot_path)
+plt.savefig("images/bootstrap_r2_dist.png")
+
+# Subplot 2: Medias y errores estándar
+plt.figure(figsize=(5, 6))
+means = [np.mean(bootstrap_matrix[:, i]) for i in range(len(model_names))]
+stds = [np.std(bootstrap_matrix[:, i]) for i in range(len(model_names))]
+bars = plt.bar(model_names, means, yerr=stds, capsize=5, 
+               color=['skyblue', 'lightgreen', 'lightcoral', 'lightyellow'])
+plt.title('Media R² ± Error Estándar (Bootstrap)')
+plt.ylabel('R² Score')
+plt.xticks(rotation=45)
+plt.grid(axis='y', alpha=0.3)
+for bar, mean, std in zip(bars, means, stds):
+    plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + std + 0.01, 
+             f'{mean:.3f}', ha='center', va='bottom', fontweight='bold')
+plt.tight_layout()
+plt.savefig("images/bootstrap_r2_media.png")
+
+# Subplot 3: Heatmap de p-values si existe
+if test_p < 0.05 and 'posthoc_result' in locals():
+    plt.figure(figsize=(10, 6))
+    if test_used == 'Friedman':
+        sns.heatmap(posthoc_result, annot=True, fmt='.4f', cmap='RdYlBu_r', 
+                   xticklabels=model_names, yticklabels=model_names)
+        plt.title('Nemenyi - Matriz de p-values')
+    else:
+        # Para Tukey, crear una representación visual diferente
+        plt.text(0.5, 0.5, 'Ver resultados Tukey\nen la consola', 
+                ha='center', va='center', transform=plt.gca().transAxes)
+        plt.title('Post-hoc Tukey HSD')
+    plt.tight_layout()
+    plt.savefig("images/bootstrap_posthoc.png")
+
+# Subplot 4: Ranking visual
+plt.figure(figsize=(10, 6))
+ranking_scores = [np.mean(bootstrap_matrix[:, i]) for i in range(len(model_names))]
+sorted_indices = np.argsort(ranking_scores)[::-1]
+sorted_models = [model_names[i] for i in sorted_indices]
+sorted_scores = [ranking_scores[i] for i in sorted_indices]
+
+bars = plt.barh(range(len(sorted_models)), sorted_scores, 
+               color=['gold', 'silver', '#CD7F32', 'lightgray'])
+plt.yticks(range(len(sorted_models)), [f"{i+1}. {model}" for i, model in enumerate(sorted_models)])
+plt.xlabel('R² Score Promedio')
+plt.title('Ranking de Modelos')
+plt.grid(axis='x', alpha=0.3)
+for i, (bar, score) in enumerate(zip(bars, sorted_scores)):
+    plt.text(bar.get_width() + 0.005, bar.get_y() + bar.get_height()/2, 
+             f'{score:.4f}', va='center', fontweight='bold')
+
+plt.tight_layout()
+plt.savefig('images/bootstrap_ranking.png')
 plt.close()
+
+print(f"\n📊 Análisis bootstrap completado")
+print(f"\nResumen de resultados:")
+print(f"  Test utilizado: {test_used}")
+print(f"  Estadístico: {test_stat:.4f}")
+print(f"  p-value: {test_p:.6f}")
+if test_p < 0.05:
+    print("  ✅ Diferencias significativas encontradas")
+    print("  📋 Se realizó análisis post-hoc")
+else:
+    print("  ❌ No se encontraron diferencias significativas")
+    print("  📋 No se requiere análisis post-hoc")
 
 # MEJOR MODELO
 best_model_name = comparison_df.iloc[0]['Modelo']
@@ -637,6 +698,7 @@ models_list = ['Regresión Lineal',
           'Bosques Aleatorios',
           'Regresión de Vectores de Soporte',
           'Potenciación de Gradiente']
+models_list += ['XGBoost', 'LightGBM']
 add_subtitle(story, "Modelos a comparar")
 add_list(story, models_list)
 add_spacer(story, 1,6)
@@ -672,63 +734,160 @@ add_subtitle(story, "Análisis de clasificación")
 add_table(story, clasificacion_df)
 add_spacer(story, 1,6)
 
-add_subtitle(story, "Test de normalidad de residuales (Shapiro-Wilk y Kolmogorov-Smirnov)")
-normality_table = pd.DataFrame(normality_tests)
-add_table(story, normality_table)
-add_spacer(story, 1,6)
+# Pruebas estadísticas
+add_subtitle(story, "Análisis Estadístico de Comparación de Modelos")
+add_paragraph(story, "Se realizó un análisis estadístico robusto utilizando bootstrap para comparar el rendimiento de los modelos.")
+add_spacer(story, 1, 6)
 
-add_subtitle(story, "Comparación de modelos (ANOVA o Friedman)")
-add_paragraph(story, f"Test usado: {test_used}")
-add_paragraph(story, f"stat={test_stat}, p={test_p}")
-if test_p < 0.05:
-    add_paragraph(story, "\nDiferencias significativas entre modelos (p < 0.05)")
-else:
-    add_paragraph(story, "\nNo hay diferencias significativas entre modelos (p >= 0.05)")
-add_spacer(story, 1,6)
+# Información del bootstrap
+add_subtitle(story, "Metodología Bootstrap")
+add_paragraph(story, f"Se generaron {n_bootstrap} muestras bootstrap para obtener distribuciones de rendimiento más robustas.")
+add_paragraph(story, "Estadísticas bootstrap por modelo:")
+for i, model in enumerate(model_names):
+    mean_score = np.mean(bootstrap_matrix[:, i])
+    std_score = np.std(bootstrap_matrix[:, i])
+    add_paragraph(story, f"• {model}: Media R² = {mean_score:.4f} ± {std_score:.4f}")
+add_spacer(story, 1, 6)
 
-if test_p < 0.05:
-    add_subtitle(story, "Análisis Post-hoc: Prueba de Nemenyi")
-    add_paragraph(story, f"Dado que el test de Friedman fue significativo (p = {test_p:.2e}), se procedió con el análisis post-hoc usando la prueba de Nemenyi.")
-    add_spacer(story, 1,6)
+# Test de normalidad
+add_subtitle(story, "Test de Normalidad en Muestras Bootstrap")
+normality_data = []
+for i, model in enumerate(model_names):
+    if len(bootstrap_matrix[:, i]) <= 50:
+        stat, p = shapiro(bootstrap_matrix[:, i])
+        test = 'Shapiro-Wilk'
+    else:
+        stat, p = kstest(bootstrap_matrix[:, i], 'norm')
+        test = 'Kolmogorov-Smirnov'
     
-    # Agregar matriz de p-values si existe
-    if posthoc_result is not None:
-        add_subtitle(story, "Matriz de p-values - Nemenyi")
-        add_image(story, "images/posthoc_nemenyi_detailed.png", 400, 300)
-        add_spacer(story, 1,6)
+    normality_data.append({
+        'Modelo': model,
+        'Test': test,
+        'Estadístico': f"{stat:.4f}",
+        'p-value': f"{p:.4f}",
+        'Normal': 'Sí' if p > 0.05 else 'No'
+    })
+
+normality_df = pd.DataFrame(normality_data)
+add_table(story, normality_df)
+add_paragraph(story, f"Todas las muestras bootstrap son normales: {'Sí' if all_bootstrap_normal else 'No'}")
+add_spacer(story, 1, 6)
+
+# Prueba estadística principal
+add_subtitle(story, f"Comparación de Modelos: Test de {test_used}")
+add_paragraph(story, f"Test utilizado: {test_used}")
+add_paragraph(story, f"Estadístico: {test_stat:.4f}")
+add_paragraph(story, f"p-value: {test_p:.6f}")
+
+if test_p < 0.05:
+    add_paragraph(story, "Resultado: Diferencias significativas encontradas entre los modelos (p < 0.05)")
+    add_paragraph(story, "Se procede con el análisis post-hoc para identificar qué modelos difieren específicamente.")
+else:
+    add_paragraph(story, "Resultado: No se encontraron diferencias significativas entre los modelos (p ≥ 0.05)")
+    add_paragraph(story, "No se requiere análisis post-hoc.")
+
+add_spacer(story, 1, 6)
+
+# Análisis post-hoc si es necesario
+if test_p < 0.05 and 'posthoc_result' in locals():
+    if test_used == 'ANOVA':
+        add_subtitle(story, "Análisis Post-hoc: Tukey HSD")
+        add_paragraph(story, "Se aplicó la prueba de Tukey HSD para comparaciones múltiples:")
+        # Para Tukey, mostrar resultados textuales
+        tukey_data = []
+        for row in posthoc_result.itertuples():
+            tukey_data.append({
+                'Grupo 1': row[1],
+                'Grupo 2': row[2],
+                'Diferencia de medias': f"{row[3]:.4f}",
+                'p-value': f"{row[6]:.4f}",
+                'Significativo': 'Sí' if row[6] < 0.05 else 'No'
+            })
+        tukey_df = pd.DataFrame(tukey_data)
+        add_table(story, tukey_df)
         
-        add_subtitle(story, "Rangos promedio de modelos")
-        add_image(story, "images/nemenyi_ranks.png", 400, 250)
-        add_spacer(story, 1,6)
+    else:  # Friedman
+        add_subtitle(story, "Análisis Post-hoc: Nemenyi")
+        add_paragraph(story, f"Dado que el test de Friedman fue significativo (p = {test_p:.2e}), se aplicó la prueba de Nemenyi.")
         
-        # Interpretar resultados
+        # Crear tabla de p-values significativos
         alpha = 0.05
         significant_pairs = []
+        pairwise_data = []
         
         for i in range(len(model_names)):
             for j in range(i+1, len(model_names)):
                 p_value = posthoc_result.iloc[i, j]
+                pairwise_data.append({
+                    'Modelo 1': model_names[i],
+                    'Modelo 2': model_names[j],
+                    'p-value': f"{p_value:.4f}",
+                    'Significativo': 'Sí' if p_value < alpha else 'No'
+                })
                 if p_value < alpha:
                     significant_pairs.append((model_names[i], model_names[j], p_value))
         
+        pairwise_df = pd.DataFrame(pairwise_data)
+        add_table(story, pairwise_df)
+        
         if significant_pairs:
-            add_subtitle(story, "Comparaciones significativas")
+            add_subtitle(story, "Comparaciones Significativas (p < 0.05)")
             for pair in significant_pairs:
-                add_paragraph(story, f"\n\t• {pair[0]} vs {pair[1]}: p = {pair[2]:.2e}")
+                add_paragraph(story, f"• {pair[0]} vs {pair[1]}: p = {pair[2]:.4f}")
         else:
-            add_paragraph(story, f"No se encontraron diferencias significativas entre pares de modelos (α = {alpha})")
-        
-        add_spacer(story, 1,6)
-        
-        add_subtitle(story, "Conclusiones del análisis post-hoc")
-        add_paragraph(story, "La prueba de Nemenyi reveló las siguientes conclusiones:")
-        
-        add_paragraph(story, f"1. El test de Friedman confirmó diferencias significativas entre los modelos (p = {test_p:.2e})")
-        add_paragraph(story, f"2. El modelo '{best_model_name}' mostró el mejor rendimiento con R² = {best_r2:.4f}")
-        add_paragraph(story, "3. Los análisis post-hoc identificaron qué modelos difieren significativamente entre sí")
-        add_paragraph(story, "4. Esta información es crucial para la selección del modelo óptimo")
+            add_paragraph(story, f"No se encontraron diferencias significativas entre pares de modelos individuales (α = {alpha})")
+    
+    add_spacer(story, 1, 6)
+
+# Visualización del análisis bootstrap
+add_subtitle(story, "Prueba de Nemenyi")
+add_image(story, "images/bootstrap_posthoc.png", 500, 300)
+add_spacer(story, 1, 6)
+
+# Ranking final de modelos
+add_subtitle(story, "Ranking Final de Modelos")
+ranking_scores = [np.mean(bootstrap_matrix[:, i]) for i in range(len(model_names))]
+sorted_indices = np.argsort(ranking_scores)[::-1]
+
+ranking_data = []
+for rank, idx in enumerate(sorted_indices):
+    model = model_names[idx]
+    score = ranking_scores[idx]
+    std_score = np.std(bootstrap_matrix[:, idx])
+    ranking_data.append({
+        'Ranking': rank + 1,
+        'Modelo': model,
+        'R² Promedio': f"{score:.4f}",
+        'Desviación Estándar': f"{std_score:.4f}",
+        'Intervalo de Confianza': f"[{score-1.96*std_score:.4f}, {score+1.96*std_score:.4f}]"
+    })
+
+ranking_df = pd.DataFrame(ranking_data)
+add_table(story, ranking_df)
+add_spacer(story, 1, 6)
+
+# Conclusiones estadísticas
+add_subtitle(story, "Conclusiones del Análisis Estadístico")
+add_paragraph(story, "Principales hallazgos del análisis estadístico:")
+
+conclusions = [
+    f"1. Se utilizó bootstrap con {n_bootstrap} muestras para obtener estimaciones robustas del rendimiento",
+    f"2. El test de {test_used} {'confirmó' if test_p < 0.05 else 'no detectó'} diferencias significativas entre modelos (p = {test_p:.6f})",
+]
+
+if test_p < 0.05:
+    conclusions.append("3. El análisis post-hoc identificó diferencias específicas entre pares de modelos")
+    conclusions.append("4. El ranking final refleja diferencias estadísticamente significativas")
 else:
-    add_paragraph(story, "No se realizó análisis post-hoc porque el test de Friedman no fue significativo.")
+    conclusions.append("3. Todos los modelos muestran rendimiento estadísticamente equivalente")
+    conclusions.append("4. La selección del modelo puede basarse en otros criterios (interpretabilidad, velocidad, etc.)")
+
+conclusions.append(f"5. El modelo '{model_names[sorted_indices[0]]}' obtuvo el mejor rendimiento promedio")
+
+for conclusion in conclusions:
+    add_paragraph(story, conclusion)
+
+add_spacer(story, 1, 6)
 
 # Mejor modelo
 add_subtitle(story, "Modelo Optimo")
@@ -739,12 +898,8 @@ add_paragraph(story, f"• Raiz del Error Cuadrado Promedio: {results[best_model
 add_paragraph(story, f"• Error Cuadrado Promedio: {results[best_model_name]['mse']}")
 add_paragraph(story, f"• Brier Score: {results[best_model_name]['brier']}")
 
-add_subtitle(story, "Gráfico de residuales por modelo")
-add_image(story, boxplot_path, 400, 300)
-add_spacer(story, 1,6)
-
 # Generar PDF
-build_pdf(doc, story)
+build_pdf(doc, story)   
 print("\n✅ PDF generado correctamente")
 
 def run_streamlit():

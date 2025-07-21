@@ -5,3 +5,5 @@ reportlab
 joblib
 scikit-learn
 scikit_posthocs
+xgboost
+lightgbm
