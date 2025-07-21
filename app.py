@@ -40,6 +40,7 @@ LANG_DICT = {
         'spanish': "Español",
         'english': "Inglés",
         'pdf_download': "Descargar PDF",
+        'factor': 'Característica',
         'value': 'Valor',
         'french': 'Francés',
         'german': 'Alemán',
@@ -131,7 +132,8 @@ LANG_DICT = {
         'factor_failures_no': '✅ Sin fallas académicas previas',
         'factor_failures_many': '❌ Múltiples fallas académicas',
         'factor_good_studytime': '✅ Buen tiempo de estudio',
-        'factor_internet_yes': '✅ Acceso a Internet'
+        'factor_internet_yes': '✅ Acceso a Internet',
+        'typical_age': '✅ Edad dentro del rango esperado'
     },
     'en': {
         'main_title': "🎓 University Admission Predictor",
@@ -253,7 +255,10 @@ LANG_DICT = {
         'factor_failures_no': '✅ No past class failures',
         'factor_failures_many': '❌ Multiple class failures',
         'factor_good_studytime': '✅ Good study time',
-        'factor_internet_yes': '✅ Internet access'
+        'factor_internet_yes': '✅ Internet access',
+        'typical_age': '✅ Age within expected range',
+        'factor_higher_yes': '✅ Interest in higher education',
+        'factor': 'Feature'
     }
 }
 
@@ -1119,7 +1124,7 @@ with st.form("formulario_prediccion"):
                     [lang_dict['form_g1'], f"{G1:.1f}"],
                     [lang_dict['form_g2'], f"{G2:.1f}"]
                 ],
-                columns=(lang_dict['value'], lang_dict['value'])
+                columns=[lang_dict['factor'], lang_dict['value']]
             )
             
             try:
@@ -1129,7 +1134,7 @@ with st.form("formulario_prediccion"):
                 # Fallback display if table fails
                 st.write(f"**{lang_dict['data_summary']}**: ")
                 for _, row in df_resumen.iterrows():
-                    st.write(f"• **{row[lang_dict['value']]}:** {row[lang_dict['value']]}")
+                    st.write(f"• **{row[lang_dict['factor']]}:** {row[lang_dict['value']]}")
 
 # Sidebar con información
 st.sidebar.header(lang_dict['sidebar_info'])

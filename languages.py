@@ -36,6 +36,7 @@ additional_languages = {
         'russian': "Russe",
         'chinese': "Chinois",
         'japanese': "Japonais",
+        'factor': 'Facteur',
         'value': "Valeur",
         'pdf_download': "Télécharger PDF",
         'form_instructions_title': '📝 Instructions',
@@ -121,7 +122,8 @@ additional_languages = {
         'factor_failures_no': '✅ Aucun échec scolaire passé',
         'factor_failures_many': '❌ Plusieurs échecs scolaires',
         'factor_good_studytime': '✅ Bon temps d\'étude',
-        'factor_internet_yes': '✅ Accès Internet'
+        'factor_internet_yes': '✅ Accès Internet',
+        'typical_age': '✅ Âge dans la plage attendue'
     },
     'de': {  # German
         'main_title': "🎓 Universitätszulassungs-Vorhersage",
@@ -154,6 +156,7 @@ additional_languages = {
         'french': "Französisch",
         'german': "Deutsch",
         'value': "Wert",
+        'factor': 'Faktor',
         'pdf_download': "PDF Herunterladen",
         'form_instructions_title': '📝 Anweisungen',
         'form_instructions_body': 'Füllen Sie das Formular mit den angeforderten Informationen aus, um eine genaue Vorhersage der akademischen Leistung zu erhalten.',
@@ -238,7 +241,8 @@ additional_languages = {
         'factor_failures_no': '✅ Keine früheren Klassenfehler',
         'factor_failures_many': '❌ Mehrere Klassenfehler',
         'factor_good_studytime': '✅ Gute Lernzeit',
-        'factor_internet_yes': '✅ Internetzugang'
+        'factor_internet_yes': '✅ Internetzugang',
+        'typical_age': '✅ Alter im erwarteten Bereich'
     },
     'it': {  # Italian
         'main_title': "🎓 Predittore di Ammissione Universitaria",
@@ -271,6 +275,7 @@ additional_languages = {
         'french': "Francese",
         'german': "Tedesco",
         'italian': "Italiano",
+        'factor': 'Fattore',
         'value': "Valore",
         'pdf_download': "Scarica PDF",
         'form_instructions_title': '📝 Istruzioni',
@@ -356,7 +361,8 @@ additional_languages = {
         'factor_failures_no': '✅ Nessun fallimento scolastico passato',
         'factor_failures_many': '❌ Molteplici fallimenti scolastici',
         'factor_good_studytime': '✅ Buon tempo di studio',
-        'factor_internet_yes': '✅ Accesso a Internet'
+        'factor_internet_yes': '✅ Accesso a Internet',
+        'typical_age': '✅ Età compresa nell\'intervallo previsto'
     },
     'pt': {  # Portuguese
         'main_title': "🎓 Preditor de Admissão Universitária",
@@ -390,6 +396,7 @@ additional_languages = {
         'german': "Alemão",
         'italian': "Italiano",
         'portuguese': "Português",
+        'factor': 'Fator',
         'value': "Valor",
         'pdf_download': "Baixar PDF",
         'form_instructions_title': '📝 Instruções',
@@ -475,10 +482,12 @@ additional_languages = {
         'factor_failures_no': '✅ Sem falhas de classe anteriores',
         'factor_failures_many': '❌ Múltiplas falhas de classe',
         'factor_good_studytime': '✅ Bom tempo de estudo',
-        'factor_internet_yes': '✅ Acesso à Internet'
+        'factor_internet_yes': '✅ Acesso à Internet',
+        'typical_age': '✅ Idade dentro da faixa esperada'
     },
     'ru': {  # Russian
         'main_title': "🎓 Предсказатель Поступления в Университет",
+        'factor_internet_yes': '✅ Доступ к интернету',
         'subtitle': "**Система предсказания на основе машинного обучения**",
         'student_info': "📋 Информация о Студенте",
         'predict_button': "🔮 Предсказать Поступление",
@@ -510,6 +519,7 @@ additional_languages = {
         'italian': "Итальянский",
         'portuguese': "Португальский",
         'russian': "Русский",
+        'factor': 'Фактор',
         'value': "Значение",
         'pdf_download': "Скачать PDF",
         'form_instructions_title': '📝 Инструкции',
@@ -590,7 +600,10 @@ additional_languages = {
         'g2_low': '❌ G2: Низкая оценка',
         'form_ready': '✨ Готовы увидеть результат?',
         'predict_button_final': '🔮 Предсказать вероятность поступления',
-        'pdf_button_report': '📄 Создать PDF-отчет'
+        'pdf_button_report': '📄 Создать PDF-отчет',
+        'typical_age': '✅ Возраст в пределах ожидаемого диапазона',
+        'factor_higher_yes': '✅ Интерес к высшему образованию',
+        'factor_failures_no': '✅ Нет прошлых неуспешных оценок'
     },
     'zh': {  # Chinese
         'main_title': "🎓 大学录取预测器",
@@ -600,6 +613,7 @@ additional_languages = {
         'pdf_button': "📄 生成PDF",
         'error_found': "❌ 发现以下错误：",
         'complete_fields': "❌ 请填写所有必填字段",
+        'factor_internet_yes': '✅ 有互联网连接',
         'success_data': "✅ 数据处理成功！",
         'prediction_result': "🔮 预测结果",
         'likely_admission': "🎉 **可能录取**",
@@ -626,6 +640,7 @@ additional_languages = {
         'portuguese': "葡萄牙语",
         'russian': "俄语",
         'chinese': "中文",
+        'factor': '因素',
         'value': "值",
         'pdf_download': "下载PDF",
         'form_instructions_title': '📝 说明',
@@ -704,13 +719,18 @@ additional_languages = {
         'g2_excellent': '✅ G2: 优秀成绩',
         'g2_average': '⚠️ G2: 平均成绩',
         'g2_low': '❌ G2: 低分',
+        'factor_failures_no': '✅ 没有过往的课程不及格记录',
         'form_ready': '✨ 准备好查看结果了吗？',
         'predict_button_final': '🔮 预测录取概率',
-        'pdf_button_report': '📄 生成PDF报告'
+        'pdf_button_report': '📄 生成PDF报告',
+        'typical_age': '✅ 年龄在预期范围内',
+        'factor_higher_yes': '✅ 对高等教育感兴趣'
     },
     'ja': {  # Japanese
         'main_title': "🎓 大学入学予測システム",
+        'factor_failures_no': '✅ 過去の落第はありません',
         'subtitle': "**機械学習による予測システム**",
+        'factor_internet_yes': '✅ インターネット接続あり',
         'student_info': "📋 学生情報",
         'predict_button': "🔮 入学予測",
         'pdf_button': "📄 PDF生成",
@@ -743,6 +763,7 @@ additional_languages = {
         'russian': "ロシア語",
         'chinese': "中国語",
         'japanese': "日本語",
+        'factor': '要因',
         'value': "値",
         'pdf_download': "PDFダウンロード",
         'form_instructions_title': '📝 手順',
@@ -823,7 +844,9 @@ additional_languages = {
         'g2_low': '❌ G2: 低い成績',
         'form_ready': '✨ 結果を見る準備はできましたか？',
         'predict_button_final': '🔮 入学確率を予測する',
-        'pdf_button_report': '📄 PDFレポートを生成する'
+        'pdf_button_report': '📄 PDFレポートを生成する',
+        'typical_age': '✅ 年齢が期待範囲内です',
+        'factor_higher_yes': '✅ 高等教育への関心'
     }
 }
 
