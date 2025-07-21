@@ -18,39 +18,33 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import scikit_posthocs as sp
 
 # Lectura de datos
-ad_df = pd.read_csv("Datos_abiertos_admision_2021_1_2024_1.csv")
+df = pd.read_csv("student-por.csv")
 
-# Limpieza de columnas y eliminar filas con valores nulos
-ad_df = ad_df.drop(['IDHASH', 'COLEGIO_DEPA', 'COLEGIO_PROV', 'COLEGIO_DIST',
-                    'COLEGIO_PAIS', 'DOMICILIO_DEPA', 'DOMICILIO_PROV',
-                    'DOMICILIO_DIST', 'NACIMIENTO_PAIS', 'NACIMIENTO_DEPA',
-                    'NACIMIENTO_PROV', 'NACIMIENTO_DIST'], axis=1).dropna()
-
-# Plots de distribución de frecuencia para ESPECIALIDAD y MODALIDAD
+# Plots de distribución de frecuencia para TIEMPOO_ESTUDIO y FALLAS
 plt.figure(figsize=(10, 6))
-ad_df['ESPECIALIDAD'].value_counts().plot(kind='bar', color='skyblue')
-plt.title('Distribución de Frecuencia de ESPECIALIDAD')
-plt.xlabel('ESPECIALIDAD')
+df['studytime'].value_counts().plot(kind='bar', color='skyblue')
+plt.title('Distribución de Frecuencia de TIEMPO_ESTUDIO')
+plt.xlabel('TIEMPO_ESTUDIO')
 plt.ylabel('Frecuencia')
 plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
-plt.savefig('images/frecuencia_especialidad.png')
+plt.savefig('images/frecuencia_estudio.png')
 plt.close()
 
-plt.figure(figsize=(8, 5))
-ad_df['MODALIDAD'].value_counts().plot(kind='bar', color='lightgreen')
-plt.title('Distribución de Frecuencia de MODALIDAD')
-plt.xlabel('MODALIDAD')
+plt.figure(figsize=(10, 6))
+df['failures'].value_counts().plot(kind='bar', color='lightgreen')
+plt.title('Distribución de Frecuencia de FALLAS')
+plt.xlabel('FALLAS')
 plt.ylabel('Frecuencia')
 plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
-plt.savefig('images/frecuencia_modalidad.png')
+plt.savefig('images/frecuencia_fallas.png')
 plt.close()
 
 # Gráfico de dispersión para columnas numéricas
-numeric_cols = ad_df.select_dtypes(include=[np.number]).columns.tolist()
+numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
 if len(numeric_cols) > 1:
-    sns.pairplot(ad_df[numeric_cols])
+    sns.pairplot(df[numeric_cols])
     plt.suptitle('Matriz de Dispersión de Variables Numéricas', y=1.02)
     plt.savefig('images/dispersion_numericas.png')
     plt.close()
@@ -58,10 +52,10 @@ if len(numeric_cols) > 1:
 # Plots de medidas de tendencia central para columnas numéricas
 for col in numeric_cols:
     plt.figure(figsize=(8, 5))
-    sns.histplot(ad_df[col].to_numpy(), kde=True, color='lightblue', bins=30)
-    mean = float(ad_df[col].mean())
-    median = float(ad_df[col].median())
-    mode = float(ad_df[col].mode().iloc[0]) if not ad_df[col].mode().empty else np.nan
+    sns.histplot(df[col].to_numpy(), kde=True, color='lightblue', bins=30)
+    mean = float(df[col].mean())
+    median = float(df[col].median())
+    mode = float(df[col].mode().iloc[0]) if not df[col].mode().empty else np.nan
     plt.axvline(mean, color='red', linestyle='--', label=f'Media: {mean:.2f}')
     plt.axvline(median, color='green', linestyle='-.', label=f'Mediana: {median:.2f}')
     plt.axvline(mode, color='blue', linestyle=':', label=f'Moda: {mode:.2f}')
@@ -76,31 +70,34 @@ for col in numeric_cols:
 print("\n" + "="*60)
 print("ESTADÍSTICAS DESCRIPTIVAS")
 print("="*60+"\n")
-estadisticas = ad_df.describe()
+estadisticas = df.describe()
 print(estadisticas)
 
+
 # Categorización de datos
-columnas_categoricas = ['COLEGIO', 'ESPECIALIDAD', 'SEXO', 'MODALIDAD', 'INGRESO']
+columnas_categoricas = ['school', 'sex', 'address', 'famsize', 'Pstatus', 'Mjob', 'Fjob', 'reason', 'guardian', 'schoolsup', 'famsup', 'paid', 'activities', 'nursery', 'higher', 'internet' , 'romantic', 'famrel']
+df_copy = df.copy()
 label_encoders = {}
 for col in columnas_categoricas:
   le = LabelEncoder()
   col_name = col + "_ENCODED"
-  ad_df[col_name] = le.fit_transform(ad_df[col])
-  label_encoders[col] = le
-  ad_df = ad_df.drop(col, axis=1)
+  df_copy[col] = le.fit_transform(df[col])
+
+df = df_copy.copy()
 
 # Visualización de correlaciones
-plt.figure(figsize=(10, 8))
-sns.heatmap(ad_df.corr(), annot=True, cmap='coolwarm', center=0)
+plt.figure(figsize=(20, 12))
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm', center=0)
 plt.tight_layout()
 plt.savefig("images/matriz_correlacion.png")
 
+df['ingreso'] = df['G3'].apply(lambda x: 1 if x > 12 else 0)
 train_size = 0.8
 test_size = 1 - train_size
 
 # Preparación de datos
-X = ad_df.drop(['INGRESO_ENCODED'], axis=1)
-y = ad_df['INGRESO_ENCODED']
+X = df.drop(['ingreso', 'G3'], axis=1)
+y = df['ingreso']
 X, y = shuffle(X, y, random_state=42)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
 
@@ -550,21 +547,6 @@ else:
         print("\nNo se realizó análisis post-hoc porque el test de Friedman no fue significativo")
         posthoc_result = None
         posthoc_plot_path = None
-    """# Friedman
-    friedman_stat, friedman_p = friedmanchisquare(*[residuals_matrix[:,i] for i in range(residuals_matrix.shape[1])])
-    print(f"\nFriedman: stat={friedman_stat}, p={friedman_p}")
-    test_used = 'Friedman'
-    test_stat, test_p = friedman_stat, friedman_p
-    # Post-hoc: Nemenyi
-    nemenyi = sp.posthoc_nemenyi_friedman(residuals_matrix)
-    posthoc_result = nemenyi
-    # Plot
-    plt.figure(figsize=(15,9))
-    sp.sign_plot(nemenyi.values, model_names)
-    plt.title('Nemenyi Post-hoc')
-    posthoc_plot_path = 'images/posthoc_nemenyi.png'
-    plt.savefig(posthoc_plot_path)
-    plt.close()"""
 
 # Residuales
 plt.figure(figsize=(10,8))
@@ -646,12 +628,6 @@ doc, story = create_pdf("reporte")
 # Titulo
 add_title(story, "Reporte de Modelos de Clasificación")
 add_spacer(story, 1,12)
-
-# Dataset
-#ad_df_short = ad_df.head()
-#add_subtitle(story, "Dataset")
-#add_table(story, ad_df_short)
-#add_spacer(story, 1,12)
 
 # Modelos usados
 models_list = ['Regresión Lineal',
