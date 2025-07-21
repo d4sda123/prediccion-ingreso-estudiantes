@@ -168,84 +168,261 @@ lang_dict = LANG_DICT[lang]
 st.set_page_config(
     page_title=lang_dict['main_title'],
     page_icon="🎓",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Título principal
-st.title(lang_dict['main_title'])
-st.markdown(lang_dict['subtitle'])
-st.markdown(lang_dict['footer'])
+# CSS personalizado para mejorar la apariencia
+st.markdown("""
+<style>
+    /* Estilo para el contenedor principal */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 1200px;
+    }
+    
+    /* Estilo para tarjetas de sección */
+    .section-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Estilo para tarjetas de información */
+    .info-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 0.5rem 0;
+        border-left: 4px solid #4CAF50;
+        backdrop-filter: blur(5px);
+    }
+    
+    /* Mejora de botones */
+    .stButton > button {
+        width: 100%;
+        border-radius: 25px;
+        height: 3rem;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Estilo para el título principal */
+    .main-title {
+        text-align: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Estilo para subtítulos */
+    .section-header {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 1.5rem 0 1rem 0;
+        padding: 0.5rem 0;
+        border-bottom: 3px solid #667eea;
+        display: inline-block;
+    }
+    
+    /* Indicador de progreso */
+    .progress-container {
+        background: #f0f2f6;
+        border-radius: 10px;
+        padding: 0.5rem;
+        margin: 1rem 0;
+    }
+    
+    /* Tarjetas de métricas */
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        margin: 0.5rem 0;
+        border: 1px solid #e1e5e9;
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Alertas personalizadas */
+    .custom-alert {
+        padding: 1rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        border-left: 4px solid;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        border-left-color: #28a745;
+        color: #155724;
+    }
+    
+    .alert-warning {
+        background-color: #fff3cd;
+        border-left-color: #ffc107;
+        color: #856404;
+    }
+    
+    .alert-info {
+        background-color: #d1ecf1;
+        border-left-color: #17a2b8;
+        color: #0c5460;
+    }
+    
+    /* Animaciones */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 2rem;
+        }
+        
+        .section-card {
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# Funciones para cargar el modelo real entrenado y label encoders usados
+# Título principal mejorado
+st.markdown(f'<h1 class="main-title">{lang_dict["main_title"]}</h1>', unsafe_allow_html=True)
+st.markdown(f'<div style="text-align: center; font-size: 1.2rem; color: #666; margin-bottom: 2rem;">{lang_dict["subtitle"]}</div>', unsafe_allow_html=True)
+
+# Cargar modelo entrenado directamente (sin archivo pkl por ahora)
 @st.cache_resource
 def cargar_modelo():
     """
-    Carga el modelo real entrenado
+    Como no tenemos el modelo entrenado, crearemos uno simulado para demostración
     """
-    model = joblib.load('models/best_model.pkl')
-
-    return model
-
-@st.cache_resource
-def cargar_label_encoder():
-    """
-    Carga label encoders usados
-    """
-    label_encoders = joblib.load('models/label_encoders.pkl')
-    return label_encoders
-
-# Función para preprocesar datos usando el modelo real
-def preprocesar_datos(datos, label_encoders):
-    """Convierte los datos del formulario usando los label encoders guardados"""
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.model_selection import train_test_split
     
-    # Crear DataFrame con el formato correcto
-    data_df = pd.DataFrame({
-        'COLEGIO_ANIO_EGRESO': [datos['año_egreso']],
-        'ANIO_POSTULA': [datos['año_postulacion']],
-        'CICLO_POSTULA': [1 if datos['ciclo'] in ['I Ciclo', 'I Cycle', 'I Zyklus', 'I Ciclo', 'I Cycle', '第一周期', '第一周期', '第Iサイクル', 'I Цикл'] else 2],
-        'ANIO_NACIMIENTO': [datos['año_nacimiento']],
-        'CALIF_FINAL': [datos['calificacion_final']],
-        'COLEGIO': [datos['colegio']],
-        'ESPECIALIDAD': [datos['especialidad']],
-        'SEXO': [datos['sexo']],
-        'MODALIDAD': [datos['modalidad']],
-    })
+    # Cargar datos del student-por.csv
+    df = pd.read_csv('student-por.csv')
     
-    categorical_columns = ['COLEGIO', 'ESPECIALIDAD', 'SEXO', 'MODALIDAD']
+    # Preparar datos
+    categorical_cols = ['school', 'sex', 'address', 'Mjob', 'reason', 'higher', 'internet']
     
-    for col in categorical_columns:
-        le = label_encoders[col]
-        data_df[col + "_ENCODED"] = data_df[col].map(lambda x: le.transform([x])[0] if x in le.classes_ else -1)
-        data_df = data_df.drop(col, axis=1)
+    # Crear encoders para variables categóricas
+    encoded_df = df.copy()
     
-    return data_df
+    for col in categorical_cols:
+        encoded_df[col] = pd.Categorical(encoded_df[col]).codes
+    
+    # Features (19 variables)
+    feature_columns = ['school', 'sex', 'age', 'address', 'Medu', 'Fedu', 'Mjob', 
+                      'reason', 'traveltime', 'studytime', 'failures', 'higher', 
+                      'internet', 'Dalc', 'Walc', 'health', 'absences', 'G1', 'G2']
+    
+    X = encoded_df[feature_columns]
+    y = encoded_df['G3']  # Calificación final como target
+    
+    # Entrenar modelo simple
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model.fit(X, y)
+    
+    return model, encoded_df[categorical_cols].apply(lambda x: pd.Categorical(x)).to_dict()
 
-# Función para validar datos
-def validar_datos(datos):
+# Función para preprocesar datos del formulario
+def preprocesar_datos_student(datos):
+    """Convierte los datos del formulario al formato esperado por el modelo"""
+    
+    # Mapear valores categóricos a códigos numéricos
+    school_map = {'GP': 0, 'MS': 1}
+    sex_map = {'F': 0, 'M': 1}
+    address_map = {'U': 0, 'R': 1}
+    mjob_map = {'at_home': 0, 'health': 1, 'other': 2, 'services': 3, 'teacher': 4}
+    reason_map = {'course': 0, 'home': 1, 'other': 2, 'reputation': 3}
+    binary_map = {'no': 0, 'yes': 1}
+    
+    # Crear array con las 19 características
+    features = np.array([
+        school_map[datos['school']],
+        sex_map[datos['sex']],
+        datos['age'],
+        address_map[datos['address']],
+        datos['Medu'],
+        datos['Fedu'],
+        mjob_map[datos['Mjob']],
+        reason_map[datos['reason']],
+        datos['traveltime'],
+        datos['studytime'],
+        datos['failures'],
+        binary_map[datos['higher']],
+        binary_map[datos['internet']],
+        datos['Dalc'],
+        datos['Walc'],
+        datos['health'],
+        datos['absences'],
+        datos['G1'],
+        datos['G2']
+    ]).reshape(1, -1)
+    
+    return features
+
+# Función para validar datos del student-por
+def validar_datos_student(datos):
     errores = []
 
-    if datos['año_nacimiento'] > datetime.now().year - 15:
-        errores.append("El año de nacimiento debe ser al menos 15 años atrás")
+    if datos['age'] < 15 or datos['age'] > 22:
+        errores.append("La edad debe estar entre 15 y 22 años")
 
-    if datos['año_egreso'] > datetime.now().year:
-        errores.append("El año de egreso no puede ser futuro")
+    if datos['Medu'] < 0 or datos['Medu'] > 4:
+        errores.append("El nivel de educación de la madre debe estar entre 0 y 4")
+        
+    if datos['Fedu'] < 0 or datos['Fedu'] > 4:
+        errores.append("El nivel de educación del padre debe estar entre 0 y 4")
 
-    if datos['año_egreso'] < datos['año_nacimiento'] + 15:
-        errores.append("El año de egreso debe ser al menos 15 años después del nacimiento")
+    if datos['failures'] < 0 or datos['failures'] > 4:
+        errores.append("El número de fallas debe estar entre 0 y 4")
 
-    if datos['año_postulacion'] < datos['año_egreso']:
-        errores.append("El año de postulación no puede ser anterior al año de egreso")
-
-    if datos['calificacion_final'] < 0 or datos['calificacion_final'] > 20:
-        errores.append("La calificación debe estar entre 0 y 20")
+    if datos['G1'] < 0 or datos['G1'] > 20:
+        errores.append("La calificación G1 debe estar entre 0 y 20")
+        
+    if datos['G2'] < 0 or datos['G2'] > 20:
+        errores.append("La calificación G2 debe estar entre 0 y 20")
+        
+    if datos['absences'] < 0 or datos['absences'] > 93:
+        errores.append("El número de ausencias debe estar entre 0 y 93")
 
     return errores
 
-# Cargar modelo real
-model = cargar_modelo()
-
-# Cargar label encoders
-label_encoders = cargar_label_encoder()
+# Cargar modelo
+model, categorical_encoders = cargar_modelo()
 
 def generar_pdf_formulario(datos, prediccion):
     """
@@ -330,235 +507,484 @@ def get_pdf_download_link(pdf_path, filename):
         href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">{lang_dict["pdf_download"]}</a>'
         return href
 
-# Crear el formulario
+# Instrucciones paso a paso
+st.markdown(
+    f"""
+    <div class="info-card">
+        <h4 style="margin-top: 0; color: #2c3e50;">📝 Instrucciones</h4>
+        <p style="margin-bottom: 0;">Complete el formulario con la información solicitada para obtener una predicción precisa sobre el rendimiento académico.</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+
+# Crear el formulario con las 19 características del student-por.csv
 with st.form("formulario_prediccion"):
-    st.subheader(lang_dict['student_info'])
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        año_nacimiento = st.number_input(
-            lang_dict['year_of_birth'],
-            min_value=1950,
-            max_value=datetime.now().year - 15,
-            value=2000,
-            step=1
-        )
-
-        sexo = st.selectbox(
-            lang_dict['sex'],
-            lang_dict['sexs']
-        )
-
-        colegio = st.selectbox(
-            lang_dict['school_name'],
-            get_translated_schools(lang)
-        )
-
-        año_egreso = st.number_input(
-            lang_dict['year_of_graduation'],
-            min_value=1970,
-            max_value=datetime.now().year,
-            value=2018,
-            step=1
-        )
-
-    with col2:
-        especialidad = st.selectbox(
-            lang_dict['university_specialty'],
-            get_translated_specialties(lang)
-        )
-
-        año_postulacion = st.number_input(
-            lang_dict['year_of_application'],
-            min_value=2000,
-            max_value=datetime.now().year + 2,
-            value=datetime.now().year,
-            step=1
-        )
-
-        ciclo = st.selectbox(
-            lang_dict['cycle'],
-            lang_dict['cycles']
-        )
-
-        modalidad = st.selectbox(
-            lang_dict['application_mode'],
-            get_translated_application_modes(lang)
-        )
-
-    st.subheader(lang_dict['academic_performance'])
-    calificacion_final = st.number_input(
-        lang_dict['final_grade'],
-        min_value=0.0,
-        max_value=20.0,
-        value=0.0,
-        step=0.1,
-        format="%.1f",
-        help=lang_dict['final_grade_help']
+    # Sección 1: Información Básica del Estudiante
+    st.markdown(
+        f"""
+        <div class="section-card fade-in">
+            <h3 style="margin-top: 0; color: white;">📋 Información Básica del Estudiante</h3>
+        </div>
+        """, 
+        unsafe_allow_html=True
     )
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # 1. School
+        school = st.selectbox(
+            "🏫 Escuela",
+            ["GP", "MS"],
+            format_func=lambda x: "Gabriel Pereira" if x == "GP" else "Mousinho da Silveira",
+            help="Escuela del estudiante"
+        )
+        
+        # 2. Sex
+        sex = st.selectbox(
+            "👤 Sexo",
+            ["F", "M"],
+            format_func=lambda x: "Femenino" if x == "F" else "Masculino"
+        )
+        
+        # 3. Age
+        age = st.number_input(
+            "🎂 Edad",
+            min_value=15,
+            max_value=22,
+            value=16,
+            help="Edad actual del estudiante"
+        )
+        
+    with col2:
+        # 4. Address
+        address = st.selectbox(
+            "🏠 Tipo de Dirección",
+            ["U", "R"],
+            format_func=lambda x: "Urbana" if x == "U" else "Rural"
+        )
+        
+        # 5. Mother's Education
+        Medu = st.selectbox(
+            "👩‍🎓 Educación de la Madre",
+            [0, 1, 2, 3, 4],
+            format_func=lambda x: {
+                0: "Sin educación",
+                1: "Educación primaria (4to grado)",
+                2: "5to a 9no grado",
+                3: "Educación secundaria",
+                4: "Educación superior"
+            }[x]
+        )
+        
+        # 6. Father's Education
+        Fedu = st.selectbox(
+            "👨‍🎓 Educación del Padre",
+            [0, 1, 2, 3, 4],
+            format_func=lambda x: {
+                0: "Sin educación",
+                1: "Educación primaria (4to grado)",
+                2: "5to a 9no grado",
+                3: "Educación secundaria",
+                4: "Educación superior"
+            }[x]
+        )
+        
+    with col3:
+        # 7. Mother's Job
+        Mjob = st.selectbox(
+            "👩‍💼 Trabajo de la Madre",
+            ["teacher", "health", "services", "at_home", "other"],
+            format_func=lambda x: {
+                "teacher": "Profesora",
+                "health": "Salud",
+                "services": "Servicios",
+                "at_home": "En casa",
+                "other": "Otro"
+            }[x]
+        )
+        
+        # 8. Reason for choosing school
+        reason = st.selectbox(
+            "🤔 Razón para elegir la escuela",
+            ["home", "reputation", "course", "other"],
+            format_func=lambda x: {
+                "home": "Cerca de casa",
+                "reputation": "Reputación de la escuela",
+                "course": "Preferencia del curso",
+                "other": "Otro"
+            }[x]
+        )
+        
+        # 9. Travel time
+        traveltime = st.selectbox(
+            "🚌 Tiempo de viaje a la escuela",
+            [1, 2, 3, 4],
+            format_func=lambda x: {
+                1: "<15 min",
+                2: "15-30 min",
+                3: "30 min - 1 hora",
+                4: ">1 hora"
+            }[x]
+        )
+    
+    # Separador
+    st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+    
+    # Sección 2: Información Académica y Social
+    st.markdown(
+        f"""
+        <div class="section-card fade-in">
+            <h3 style="margin-top: 0; color: white;">📚 Información Académica y Social</h3>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    col4, col5, col6 = st.columns(3)
+    
+    with col4:
+        # 10. Study time
+        studytime = st.selectbox(
+            "⏱️ Tiempo de estudio semanal",
+            [1, 2, 3, 4],
+            format_func=lambda x: {
+                1: "<2 horas",
+                2: "2-5 horas",
+                3: "5-10 horas",
+                4: ">10 horas"
+            }[x]
+        )
+        
+        # 11. Past class failures
+        failures = st.number_input(
+            "❌ Fallas académicas previas",
+            min_value=0,
+            max_value=4,
+            value=0,
+            help="Número de fallas en clases anteriores"
+        )
+        
+        # 12. Higher education support
+        higher = st.selectbox(
+            "🎓 ¿Quiere seguir educación superior?",
+            ["yes", "no"],
+            format_func=lambda x: "Sí" if x == "yes" else "No"
+        )
+        
+    with col5:
+        # 13. Internet access
+        internet = st.selectbox(
+            "🌐 Acceso a Internet en casa",
+            ["yes", "no"],
+            format_func=lambda x: "Sí" if x == "yes" else "No"
+        )
+        
+        # 14. Workday alcohol consumption
+        Dalc = st.selectbox(
+            "🍺 Consumo de alcohol entre semana",
+            [1, 2, 3, 4, 5],
+            format_func=lambda x: {
+                1: "Muy bajo",
+                2: "Bajo",
+                3: "Medio",
+                4: "Alto",
+                5: "Muy alto"
+            }[x]
+        )
+        
+        # 15. Weekend alcohol consumption
+        Walc = st.selectbox(
+            "🍻 Consumo de alcohol fin de semana",
+            [1, 2, 3, 4, 5],
+            format_func=lambda x: {
+                1: "Muy bajo",
+                2: "Bajo",
+                3: "Medio",
+                4: "Alto",
+                5: "Muy alto"
+            }[x]
+        )
+        
+    with col6:
+        # 16. Health status
+        health = st.selectbox(
+            "🏥 Estado de salud actual",
+            [1, 2, 3, 4, 5],
+            format_func=lambda x: {
+                1: "Muy malo",
+                2: "Malo",
+                3: "Regular",
+                4: "Bueno",
+                5: "Muy bueno"
+            }[x],
+            index=4  # Default to "Bueno"
+        )
+        
+        # 17. Absences
+        absences = st.number_input(
+            "🚫 Número de ausencias escolares",
+            min_value=0,
+            max_value=93,
+            value=0,
+            help="Número total de ausencias"
+        )
+    
+    # Separador
+    st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
+    
+    # Sección 3: Calificaciones
+    st.markdown(
+        f"""
+        <div class="section-card fade-in">
+            <h3 style="margin-top: 0; color: white;">📊 Calificaciones</h3>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    col7, col8 = st.columns(2)
+    
+    with col7:
+        # 18. G1 - first period grade
+        G1 = st.number_input(
+            "📈 Calificación 1er Período (G1)",
+            min_value=0,
+            max_value=20,
+            value=0,
+            help="Calificación del primer período (0-20)"
+        )
+        
+    with col8:
+        # 19. G2 - second period grade
+        G2 = st.number_input(
+            "📈 Calificación 2do Período (G2)",
+            min_value=0,
+            max_value=20,
+            value=0,
+            help="Calificación del segundo período (0-20)"
+        )
+    
+    # Indicadores visuales de las calificaciones
+    col_ind1, col_ind2 = st.columns(2)
+    with col_ind1:
+        if G1 >= 15:
+            st.success("✅ G1: Excelente calificación")
+        elif G1 >= 10:
+            st.warning("⚠️ G1: Calificación promedio")
+        elif G1 > 0:
+            st.error("❌ G1: Calificación baja")
+            
+    with col_ind2:
+        if G2 >= 15:
+            st.success("✅ G2: Excelente calificación")
+        elif G2 >= 10:
+            st.warning("⚠️ G2: Calificación promedio")
+        elif G2 > 0:
+            st.error("❌ G2: Calificación baja")
+    
+    # Separador
+    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
 
-    # Botones del formulario
-    col_btn1, col_btn2 = st.columns(2)
+    # Botones del formulario con mejor diseño
+    st.markdown(
+        """
+        <div style="text-align: center; margin: 2rem 0;">
+            <h4 style="color: #2c3e50; margin-bottom: 1.5rem;">✨ ¿Listo para conocer el resultado?</h4>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    col_btn1, col_btn2 = st.columns(2, gap="large")
 
     with col_btn1:
-        predecir = st.form_submit_button(lang_dict['predict_button'], type="primary")
+        predecir = st.form_submit_button(
+            "🔮 Predecir Calificación Final", 
+            type="primary",
+            use_container_width=True
+        )
 
     with col_btn2:
-        generar_pdf = st.form_submit_button(lang_dict['pdf_button'], type="secondary")
+        generar_pdf = st.form_submit_button(
+            "📄 Generar Reporte PDF", 
+            type="secondary",
+            use_container_width=True
+        )
 
     # Procesamiento del formulario
     if predecir or generar_pdf:
-        # Recopilar datos (convertir traducciones a valores originales)
-        datos = {
-            'año_nacimiento': año_nacimiento,
-            'sexo': sexo,
-            'colegio': get_original_value(colegio, SCHOOL_TRANSLATIONS, lang),
-            'año_egreso': año_egreso,
-            'especialidad': get_original_value(especialidad, SPECIALTY_TRANSLATIONS, lang),
-            'año_postulacion': año_postulacion,
-            'ciclo': ciclo,
-            'modalidad': get_original_value(modalidad, APPLICATION_MODE_TRANSLATIONS, lang),
-            'calificacion_final': calificacion_final
+        # Recopilar datos del formulario student-por
+        datos_student = {
+            'school': school,
+            'sex': sex,
+            'age': age,
+            'address': address,
+            'Medu': Medu,
+            'Fedu': Fedu,
+            'Mjob': Mjob,
+            'reason': reason,
+            'traveltime': traveltime,
+            'studytime': studytime,
+            'failures': failures,
+            'higher': higher,
+            'internet': internet,
+            'Dalc': Dalc,
+            'Walc': Walc,
+            'health': health,
+            'absences': absences,
+            'G1': G1,
+            'G2': G2
         }
 
         # Validar datos
-        errores = validar_datos(datos)
+        errores = validar_datos_student(datos_student)
 
         if errores:
-            st.error(lang_dict['error_found'])
+            st.error("❌ Se encontraron los siguientes errores:")
             for error in errores:
                 st.error(f"• {error}")
         else:
-            # Campos obligatorios
-            if not colegio.strip() or not especialidad.strip():
-                st.error(lang_dict['complete_fields'])
-            else:
-                st.success(lang_dict['success_data'])
+            st.success("✅ Datos procesados exitosamente!")
 
-                # Realizar predicción si se solicitó
-                if predecir:
-                    st.markdown(lang_dict['footer'])
-                    st.subheader(lang_dict['prediction_result'])
+            # Realizar predicción si se solicitó
+            if predecir:
+                st.markdown("---")
+                st.subheader("🔮 Resultado de la Predicción")
 
-                    try:
-                        # Preprocesar datos para el modelo
-                        caracteristicas = preprocesar_datos(datos, label_encoders)
+                try:
+                    # Preprocesar datos para el modelo
+                    caracteristicas = preprocesar_datos_student(datos_student)
 
-                        # Realizar predicción con el modelo real
-                        prediccion_valor = model.predict(caracteristicas)[0]
+                    # Realizar predicción con el modelo
+                    prediccion_valor = model.predict(caracteristicas)[0]
 
-                        prob_ingreso = prediccion_valor * 100
+                    # Mostrar resultado
+                    col_pred1, col_pred2 = st.columns(2)
 
-                        # Mostrar resultado
-                        col_pred1, col_pred2 = st.columns(2)
+                    with col_pred1:
+                        if prediccion_valor >= 15:
+                            st.success("🎉 **EXCELENTE PREDICCIÓN**")
+                            st.balloons()
+                        elif prediccion_valor >= 10:
+                            st.warning("⚠️ **PREDICCIÓN PROMEDIO**")
+                        else:
+                            st.error("❌ **PREDICCIÓN BAJA**")
 
-                        with col_pred1:
-                            if prediccion_valor > 0.5:
-                                st.success(lang_dict['likely_admission'])
-                                st.balloons()
-                            else:
-                                st.error(lang_dict['unlikely_admission'])
-
-                        with col_pred2:
-                            st.metric(
-                                lang_dict['admission_probability'],
-                                f"{prob_ingreso:.1f}%",
-                                delta=f"{prob_ingreso-50:.1f}%" if prob_ingreso > 50 else None
-                            )
-                        
-                        # Mostrar información del modelo
-                        st.info(lang_dict['model_info'].format(model=type(model).__name__))
-                        
-                    except Exception as e:
-                        st.error(lang_dict['prediction_error'].format(e=e))
-                        st.info(lang_dict['prediction_hint'])
-
-                    # Mostrar factores influyentes
-                    st.subheader(lang_dict['factor_analysis'])
-
-                    # Crear análisis básico
-                    factores = []
-                    if calificacion_final >= 15:
-                        factores.append(lang_dict['excellent_grade'])
-                    elif calificacion_final >= 12:
-                        factores.append(lang_dict['average_grade'])
-                    else:
-                        factores.append(lang_dict['low_grade'])
-
-                    if modalidad in ["Primeros Puestos", "Centro Pre-Universitario"]:
-                        factores.append(lang_dict['favorable_mode'])
-
-                    edad = datetime.now().year - año_nacimiento
-                    if 17 <= edad <= 22:
-                        factores.append(lang_dict['typical_age'])
-
-                    años_espera = año_postulacion - año_egreso
-                    if años_espera <= 2:
-                        factores.append(lang_dict['early_application'])
-                    elif años_espera > 5:
-                        factores.append(lang_dict['late_application'])
-
-                    for factor in factores:
-                        st.write(factor)
-
-                # Generar PDF si se solicitó
-                if generar_pdf:
-                    st.markdown(lang_dict['footer'])
-                    st.subheader(lang_dict['pdf_generation'])
+                    with col_pred2:
+                        st.metric(
+                            "Calificación Final Predicha (G3)",
+                            f"{prediccion_valor:.1f}/20",
+                            delta=f"{prediccion_valor-10:.1f}" if prediccion_valor != 10 else None
+                        )
                     
-                    try:
-                        # Usar la predicción ya calculada
-                        caracteristicas = preprocesar_datos(datos, label_encoders)
-                        prediccion_valor = model.predict(caracteristicas)[0]
-                        
-                        # Generar PDF
-                        pdf_path = generar_pdf_formulario(datos, prediccion_valor)
-                        
-                        # Crear nombre de archivo
-                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        filename = f"prediccion_ingreso_{timestamp}.pdf"
-                        
-                        # Mostrar enlace de descarga
-                        st.success(lang_dict['pdf_success'])
-                        st.markdown(get_pdf_download_link(pdf_path, filename), unsafe_allow_html=True)
-                        
-                        # Limpiar archivo temporal
-                        try:
-                            os.unlink(pdf_path)
-                        except:
-                            pass
-                            
-                    except Exception as e:
-                        st.error(lang_dict['pdf_error'].format(e=e))
+                    # Mostrar información del modelo
+                    st.info(f"🤖 Modelo utilizado: {type(model).__name__}")
+                    
+                except Exception as e:
+                    st.error(f"❌ Error en la predicción: {e}")
+                    st.info("💡 Asegúrate de que los valores ingresados sean válidos.")
 
-                # Mostrar resumen de datos
-                st.markdown(lang_dict['footer'])
-                st.subheader(lang_dict['data_summary'])
+                # Mostrar factores influyentes
+                st.subheader("📈 Análisis de Factores")
 
-                df_resumen = pd.DataFrame.from_records(
-                    [
-                        [lang_dict['year_of_birth'], str(año_nacimiento)],
-                        [lang_dict['sex'], str(sexo)],
-                        [lang_dict['school_name'], str(colegio)],
-                        [lang_dict['year_of_graduation'], str(año_egreso)],
-                        [lang_dict['university_specialty'], str(especialidad)],
-                        [lang_dict['year_of_application'], str(año_postulacion)],
-                        [lang_dict['cycle'], str(ciclo)],
-                        [lang_dict['application_mode'], str(modalidad)],
-                        [lang_dict['final_grade'], f"{calificacion_final:.1f}"]
-                    ],
-                    columns=("Campo", "Valor")
-                )
+                # Crear análisis básico
+                factores = []
+                if G1 >= 15 or G2 >= 15:
+                    factores.append("✅ Excelentes calificaciones previas")
+                elif G1 >= 10 or G2 >= 10:
+                    factores.append("⚠️ Calificaciones promedio previas")
+                else:
+                    factores.append("❌ Calificaciones bajas previas")
+
+                if higher == "yes":
+                    factores.append("✅ Interés en educación superior")
+
+                if age >= 15 and age <= 18:
+                    factores.append("✅ Edad típica para el nivel")
+
+                if failures == 0:
+                    factores.append("✅ Sin fallas académicas previas")
+                elif failures > 2:
+                    factores.append("❌ Múltiples fallas académicas")
+
+                if studytime >= 3:
+                    factores.append("✅ Buen tiempo de estudio")
+                    
+                if internet == "yes":
+                    factores.append("✅ Acceso a Internet")
+
+                for factor in factores:
+                    st.write(factor)
+
+            # Generar PDF si se solicitó
+            if generar_pdf:
+                st.markdown("---")
+                st.subheader("📄 Generación de PDF")
                 
                 try:
-                    # Use table instead of dataframe to avoid PyArrow issues
-                    st.table(df_resumen)
+                    # Usar la predicción ya calculada
+                    caracteristicas = preprocesar_datos_student(datos_student)
+                    prediccion_valor = model.predict(caracteristicas)[0]
+                    
+                    # Generar PDF
+                    pdf_path = generar_pdf_student(datos_student, prediccion_valor)
+                    
+                    # Crear nombre de archivo
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"prediccion_academica_{timestamp}.pdf"
+                    
+                    # Mostrar enlace de descarga
+                    st.success("✅ PDF generado exitosamente!")
+                    st.markdown(get_pdf_download_link(pdf_path, filename), unsafe_allow_html=True)
+                    
+                    # Limpiar archivo temporal
+                    try:
+                        os.unlink(pdf_path)
+                    except:
+                        pass
+                        
                 except Exception as e:
-                    # Fallback display if table fails
-                    st.write("**Resumen de Datos:**")
-                    for _, row in df_resumen.iterrows():
-                        st.write(f"• **{row['Campo']}:** {row['Valor']}")
+                    st.error(f"❌ Error al generar PDF: {e}")
+
+            # Mostrar resumen de datos
+            st.markdown("---")
+            st.subheader("📋 Resumen de Datos")
+
+            df_resumen = pd.DataFrame.from_records(
+                [
+                    ["Escuela", "Gabriel Pereira" if school == "GP" else "Mousinho da Silveira"],
+                    ["Sexo", "Femenino" if sex == "F" else "Masculino"],
+                    ["Edad", str(age)],
+                    ["Tipo de Dirección", "Urbana" if address == "U" else "Rural"],
+                    ["Educación Madre", str(Medu)],
+                    ["Educación Padre", str(Fedu)],
+                    ["Trabajo Madre", Mjob],
+                    ["Razón Escuela", reason],
+                    ["Tiempo Viaje", str(traveltime)],
+                    ["Tiempo Estudio", str(studytime)],
+                    ["Fallas Previas", str(failures)],
+                    ["Educación Superior", "Sí" if higher == "yes" else "No"],
+                    ["Internet", "Sí" if internet == "yes" else "No"],
+                    ["Consumo Alcohol Semanal", str(Dalc)],
+                    ["Consumo Alcohol Fin de Semana", str(Walc)],
+                    ["Estado de Salud", str(health)],
+                    ["Ausencias", str(absences)],
+                    ["Calificación G1", f"{G1:.1f}"],
+                    ["Calificación G2", f"{G2:.1f}"]
+                ],
+                columns=("Campo", "Valor")
+            )
+            
+            try:
+                # Use table instead of dataframe to avoid PyArrow issues
+                st.table(df_resumen)
+            except Exception as e:
+                # Fallback display if table fails
+                st.write("**Resumen de Datos:**")
+                for _, row in df_resumen.iterrows():
+                    st.write(f"• **{row['Campo']}:** {row['Valor']}")
 
 # Sidebar con información
 st.sidebar.header(lang_dict['sidebar_info'])
