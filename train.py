@@ -769,8 +769,8 @@ for i, model in enumerate(model_names):
     normality_data.append({
         'Modelo': model,
         'Test': test,
-        'Estadístico': f"{stat:.4f}",
-        'p-value': f"{p:.4f}",
+        'Estadístico': f"{stat}",
+        'p-value': f"{p}",
         'Normal': 'Sí' if p > 0.05 else 'No'
     })
 
@@ -782,8 +782,8 @@ add_spacer(story, 1, 6)
 # Prueba estadística principal
 add_subtitle(story, f"Comparación de Modelos: Test de {test_used}")
 add_paragraph(story, f"Test utilizado: {test_used}")
-add_paragraph(story, f"Estadístico: {test_stat:.4f}")
-add_paragraph(story, f"p-value: {test_p:.6f}")
+add_paragraph(story, f"Estadístico: {test_stat}")
+add_paragraph(story, f"p-value: {test_p}")
 
 if test_p < 0.05:
     add_paragraph(story, "Resultado: Diferencias significativas encontradas entre los modelos (p < 0.05)")
