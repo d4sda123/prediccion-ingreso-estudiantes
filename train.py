@@ -331,9 +331,9 @@ plt.savefig("images/comparacion_mse.png")
 clasificacion_df = pd.DataFrame({
     'Modelo': list(results.keys()),
     'R2': [results[model]['r2'] for model in results.keys()],
-    'EAP': [results[model]['mae'] for model in results.keys()],
-    'RECP': [results[model]['rmse'] for model in results.keys()],
-    'ECP': [results[model]['mse'] for model in results.keys()],
+    'MAE': [results[model]['mae'] for model in results.keys()],
+    'RMCE': [results[model]['rmse'] for model in results.keys()],
+    'MCE': [results[model]['mse'] for model in results.keys()],
     'Brier': [results[model]['brier'] for model in results.keys()],
 })
 
@@ -731,6 +731,12 @@ add_image(story, "images/comparacion_brier.png", 240, 300)
 
 # Análisis de clasificación
 add_subtitle(story, "Análisis de clasificación")
+add_paragraph(story, f"Métricas a utilizar:")
+add_paragraph(story, f"• Coeficiente de Determinación (R2)")
+add_paragraph(story, f"• Error Absoluto Promedio (MAE)")
+add_paragraph(story, f"• Raíz del Error Absoluto Promedio (RMCE)")
+add_paragraph(story, f"• Error Cuadrático Promedio (MCE)")
+add_paragraph(story, f"• Puntuación de Brier (Brier)")
 add_table(story, clasificacion_df)
 add_spacer(story, 1,6)
 
@@ -893,9 +899,9 @@ add_spacer(story, 1, 6)
 add_subtitle(story, "Modelo Optimo")
 add_paragraph(story, f"<b>MEJOR MODELO:</b> {best_model_name}")
 add_paragraph(story, f"• R2: {results[best_model_name]['r2']}")
-add_paragraph(story, f"• Error Absoluto Promedio: {results[best_model_name]['mae']}")
-add_paragraph(story, f"• Raiz del Error Cuadrado Promedio: {results[best_model_name]['rmse']}")
-add_paragraph(story, f"• Error Cuadrado Promedio: {results[best_model_name]['mse']}")
+add_paragraph(story, f"• Error Absoluto Promedio (MAE): {results[best_model_name]['mae']}")
+add_paragraph(story, f"• Raiz del Error Cuadrado Promedio (RMCE): {results[best_model_name]['rmse']}")
+add_paragraph(story, f"• Error Cuadrado Promedio (MCE): {results[best_model_name]['mse']}")
 add_paragraph(story, f"• Brier Score: {results[best_model_name]['brier']}")
 
 # Generar PDF
