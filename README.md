@@ -40,12 +40,6 @@ El script `train.py` permite entrenar y comparar diferentes modelos de machine l
 python train.py
 ```
 
-### Probar el modelo
-El script `test.py` muestra cómo cargar el modelo y realizar una predicción con datos de ejemplo.
-```bash
-python test.py
-```
-
 ### Ejecutar la aplicación web
 ```bash
 streamlit run app.py
