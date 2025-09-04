@@ -1,0 +1,393 @@
+# Option translations for form fields
+
+# Dictionary to translate school names
+SCHOOL_TRANSLATIONS = {
+    'es': {
+        "LA DIVINA PROVIDENCIA": "LA DIVINA PROVIDENCIA",
+        "86019 LA LIBERTAD": "86019 LA LIBERTAD",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "FE Y ALEGRIA 59",
+        "CIENCIAS": "CIENCIAS",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "OTRO"
+    },
+    'en': {
+        "LA DIVINA PROVIDENCIA": "DIVINE PROVIDENCE",
+        "86019 LA LIBERTAD": "86019 LIBERTY",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "FAITH AND JOY 59",
+        "CIENCIAS": "SCIENCES",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "OTHER"
+    },
+    'fr': {
+        "LA DIVINA PROVIDENCIA": "LA DIVINE PROVIDENCE",
+        "86019 LA LIBERTAD": "86019 LA LIBERTÉ",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "FOI ET JOIE 59",
+        "CIENCIAS": "SCIENCES",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "AUTRE"
+    },
+    'de': {  # German
+        "LA DIVINA PROVIDENCIA": "GÖTTLICHE VORSEHUNG",
+        "86019 LA LIBERTAD": "86019 DIE FREIHEIT",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "GLAUBE UND FREUDE 59",
+        "CIENCIAS": "WISSENSCHAFTEN",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "ANDERE"
+    },
+    'it': {  # Italian
+        "LA DIVINA PROVIDENCIA": "LA DIVINA PROVVIDENZA",
+        "86019 LA LIBERTAD": "86019 LA LIBERTÀ",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "FEDE E GIOIA 59",
+        "CIENCIAS": "SCIENZE",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "ALTRO"
+    },
+    'pt': {  # Portuguese
+        "LA DIVINA PROVIDENCIA": "A DIVINA PROVIDÊNCIA",
+        "86019 LA LIBERTAD": "86019 A LIBERDADE",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "FÉ E ALEGRIA 59",
+        "CIENCIAS": "CIÊNCIAS",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "OUTRO"
+    },
+    'ru': {  # Russian
+        "LA DIVINA PROVIDENCIA": "БОЖЕСТВЕННОЕ ПРОВИДЕНИЕ",
+        "86019 LA LIBERTAD": "86019 СВОБОДА",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "ВЕРА И РАДОСТЬ 59",
+        "CIENCIAS": "НАУКИ",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "ДРУГОЙ"
+    },
+    'zh': {  # Chinese
+        "LA DIVINA PROVIDENCIA": "神圣天意",
+        "86019 LA LIBERTAD": "86019 自由",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "信仰与欢乐 59",
+        "CIENCIAS": "科学",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "其他"
+    },
+    'ja': {  # Japanese
+        "LA DIVINA PROVIDENCIA": "神の摂理",
+        "86019 LA LIBERTAD": "86019 自由",
+        "0113 DANIEL ALOMIAS ROBLES": "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY": "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS": "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA": "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59": "信仰と喜び 59",
+        "CIENCIAS": "科学",
+        "SAN CARLOS": "SAN CARLOS",
+        "TRILCE SAN JUAN": "TRILCE SAN JUAN",
+        "OTRO": "その他"
+    }
+}
+
+# Dictionary to translate specialties
+SPECIALTY_TRANSLATIONS = {
+    'es': {
+        "INGENIERÍA DE SISTEMAS": "INGENIERÍA DE SISTEMAS",
+        "INGENIERÍA DE TELECOMUNICACIONES": "INGENIERÍA DE TELECOMUNICACIONES",
+        "INGENIERÍA MECÁNICA": "INGENIERÍA MECÁNICA",
+        "INGENIERÍA ELECTRÓNICA": "INGENIERÍA ELECTRÓNICA",
+        "ARQUITECTURA": "ARQUITECTURA",
+        "MEDICINA": "MEDICINA",
+        "DERECHO": "DERECHO",
+        "ADMINISTRACIÓN": "ADMINISTRACIÓN",
+        "CONTABILIDAD": "CONTABILIDAD",
+        "OTRO": "OTRO"
+    },
+    'en': {
+        "INGENIERÍA DE SISTEMAS": "SYSTEMS ENGINEERING",
+        "INGENIERÍA DE TELECOMUNICACIONES": "TELECOMMUNICATIONS ENGINEERING",
+        "INGENIERÍA MECÁNICA": "MECHANICAL ENGINEERING",
+        "INGENIERÍA ELECTRÓNICA": "ELECTRONIC ENGINEERING",
+        "ARQUITECTURA": "ARCHITECTURE",
+        "MEDICINA": "MEDICINE",
+        "DERECHO": "LAW",
+        "ADMINISTRACIÓN": "ADMINISTRATION",
+        "CONTABILIDAD": "ACCOUNTING",
+        "OTRO": "OTHER"
+    },
+    'fr': {
+        "INGENIERÍA DE SISTEMAS": "INGÉNIERIE DES SYSTÈMES",
+        "INGENIERÍA DE TELECOMUNICACIONES": "INGÉNIERIE DES TÉLÉCOMMUNICATIONS",
+        "INGENIERÍA MECÁNICA": "INGÉNIERIE MÉCANIQUE",
+        "INGENIERÍA ELECTRÓNICA": "INGÉNIERIE ÉLECTRONIQUE",
+        "ARQUITECTURA": "ARCHITECTURE",
+        "MEDICINA": "MÉDECINE",
+        "DERECHO": "DROIT",
+        "ADMINISTRACIÓN": "ADMINISTRATION",
+        "CONTABILIDAD": "COMPTABILITÉ",
+        "OTRO": "AUTRE"
+    },
+    'de': {  # German
+        "INGENIERÍA DE SISTEMAS": "SYSTEMTECHNIK",
+        "INGENIERÍA DE TELECOMUNICACIONES": "TELEKOMMUNIKATIONSTECHNIK",
+        "INGENIERÍA MECÁNICA": "MASCHINENBAU",
+        "INGENIERÍA ELECTRÓNICA": "ELEKTRONIKTECHNIK",
+        "ARQUITECTURA": "ARCHITEKTUR",
+        "MEDICINA": "MEDIZIN",
+        "DERECHO": "RECHT",
+        "ADMINISTRACIÓN": "VERWALTUNG",
+        "CONTABILIDAD": "BUCHHALTUNG",
+        "OTRO": "ANDERE"
+    },
+    'it': {  # Italian
+        "INGENIERÍA DE SISTEMAS": "INGEGNERIA DEI SISTEMI",
+        "INGENIERÍA DE TELECOMUNICACIONES": "INGEGNERIA DELLE TELECOMUNICAZIONI",
+        "INGENIERÍA MECÁNICA": "INGEGNERIA MECCANICA",
+        "INGENIERÍA ELECTRÓNICA": "INGEGNERIA ELETTRONICA",
+        "ARQUITECTURA": "ARCHITETTURA",
+        "MEDICINA": "MEDICINA",
+        "DERECHO": "DIRITTO",
+        "ADMINISTRACIÓN": "AMMINISTRAZIONE",
+        "CONTABILIDAD": "CONTABILITÀ",
+        "OTRO": "ALTRO"
+    },
+    'pt': {  # Portuguese
+        "INGENIERÍA DE SISTEMAS": "ENGENHARIA DE SISTEMAS",
+        "INGENIERÍA DE TELECOMUNICACIONES": "ENGENHARIA DE TELECOMUNICAÇÕES",
+        "INGENIERÍA MECÁNICA": "ENGENHARIA MECÂNICA",
+        "INGENIERÍA ELECTRÓNICA": "ENGENHARIA ELETRÔNICA",
+        "ARQUITECTURA": "ARQUITETURA",
+        "MEDICINA": "MEDICINA",
+        "DERECHO": "DIREITO",
+        "ADMINISTRACIÓN": "ADMINISTRAÇÃO",
+        "CONTABILIDAD": "CONTABILIDADE",
+        "OTRO": "OUTRO"
+    },
+    'ru': {  # Russian
+        "INGENIERÍA DE SISTEMAS": "СИСТЕМНАЯ ИНЖЕНЕРИЯ",
+        "INGENIERÍA DE TELECOMUNICACIONES": "ИНЖЕНЕРИЯ ТЕЛЕКОММУНИКАЦИЙ",
+        "INGENIERÍA MECÁNICA": "МЕХАНИЧЕСКАЯ ИНЖЕНЕРИЯ",
+        "INGENIERÍA ELECTRÓNICA": "ЭЛЕКТРОННАЯ ИНЖЕНЕРИЯ",
+        "ARQUITECTURA": "АРХИТЕКТУРА",
+        "MEDICINA": "МЕДИЦИНА",
+        "DERECHO": "ПРАВО",
+        "ADMINISTRACIÓN": "АДМИНИСТРАЦИЯ",
+        "CONTABILIDAD": "БУХГАЛТЕРСКИЙ УЧЕТ",
+        "OTRO": "ДРУГОЙ"
+    },
+    'zh': {  # Chinese
+        "INGENIERÍA DE SISTEMAS": "系统工程",
+        "INGENIERÍA DE TELECOMUNICACIONES": "电信工程",
+        "INGENIERÍA MECÁNICA": "机械工程",
+        "INGENIERÍA ELECTRÓNICA": "电子工程",
+        "ARQUITECTURA": "建筑学",
+        "MEDICINA": "医学",
+        "DERECHO": "法学",
+        "ADMINISTRACIÓN": "管理学",
+        "CONTABILIDAD": "会计学",
+        "OTRO": "其他"
+    },
+    'ja': {  # Japanese
+        "INGENIERÍA DE SISTEMAS": "システム工学",
+        "INGENIERÍA DE TELECOMUNICACIONES": "通信工学",
+        "INGENIERÍA MECÁNICA": "機械工学",
+        "INGENIERÍA ELECTRÓNICA": "電子工学",
+        "ARQUITECTURA": "建築学",
+        "MEDICINA": "医学",
+        "DERECHO": "法学",
+        "ADMINISTRACIÓN": "経営学",
+        "CONTABILIDAD": "会計学",
+        "OTRO": "その他"
+    }
+}
+
+# Dictionary to translate application modes
+APPLICATION_MODE_TRANSLATIONS = {
+    'es': {
+        "ORDINARIO": "ORDINARIO",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS",
+        "TALENTO BECA 18": "TALENTO BECA 18",
+        "INGRESO ESCOLAR NACIONAL": "INGRESO ESCOLAR NACIONAL"
+    },
+    'en': {
+        "ORDINARIO": "ORDINARY",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "EXTRAORDINARY1 - HIGH LEVEL QUALIFIED ATHLETES (Start studies)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "EXTRAORDINARY2 – DIRECT CEPRE ADMISSION",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "EXTRAORDINARY1 - ANDRES BELLO AGREEMENT (start studies)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "EXTRAORDINARY DIRECT CEPRE-UNI ADMISSION",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "EXTRAORDINARY - FIRST TWO STUDENTS",
+        "TALENTO BECA 18": "TALENT SCHOLARSHIP 18",
+        "INGRESO ESCOLAR NACIONAL": "NATIONAL SCHOOL ADMISSION"
+    },
+    'fr': {
+        "ORDINARIO": "ORDINAIRE",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "EXTRAORDINAIRE1 - SPORTIFS QUALIFIÉS DE HAUT NIVEAU (Commencer les études)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "EXTRAORDINAIRE2 – ADMISSION DIRECTE CEPRE",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "EXTRAORDINAIRE1 - ACCORD ANDRES BELLO (commencer les études)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "EXTRAORDINAIRE ADMISSION DIRECTE CEPRE-UNI",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "EXTRAORDINAIRE - DEUX PREMIERS ÉTUDIANTS",
+        "TALENTO BECA 18": "TALENT BOURSE 18",
+        "INGRESO ESCOLAR NACIONAL": "ADMISSION SCOLAIRE NATIONALE"
+    },
+    'de': {  # German
+        "ORDINARIO": "ORDENTLICH",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "AUSSERORDENTLICH1 - QUALIFIZIERTE HOCHLEISTUNGSSPORTLER (Studium beginnen)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "AUSSERORDENTLICH2 – DIREKTER CEPRE-ZUGANG",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "AUSSERORDENTLICH1 - ANDRES BELLO ABKOMMEN (Studium beginnen)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "AUSSERORDENTLICH DIREKTER CEPRE-UNI ZUGANG",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "AUSSERORDENTLICH - ERSTE ZWEI STUDENTEN",
+        "TALENTO BECA 18": "TALENT STIPENDIUM 18",
+        "INGRESO ESCOLAR NACIONAL": "NATIONALER SCHULZUGANG"
+    },
+    'it': {  # Italian
+        "ORDINARIO": "ORDINARIO",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "STRAORDINARIO1 - ATLETI QUALIFICATI DI ALTO LIVELLO (Iniziare studi)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "STRAORDINARIO2 – AMMISSIONE DIRETTA CEPRE",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "STRAORDINARIO1 - ACCORDO ANDRES BELLO (iniziare studi)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "STRAORDINARIO AMMISSIONE DIRETTA CEPRE-UNI",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "STRAORDINARIO - PRIMI DUE STUDENTI",
+        "TALENTO BECA 18": "TALENTO BORSA 18",
+        "INGRESO ESCOLAR NACIONAL": "AMMISSIONE SCOLASTICA NAZIONALE"
+    },
+    'pt': {  # Portuguese
+        "ORDINARIO": "ORDINÁRIO",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "EXTRAORDINÁRIO1 - ATLETAS QUALIFICADOS DE ALTO NÍVEL (Iniciar estudos)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "EXTRAORDINÁRIO2 – INGRESSO DIRETO CEPRE",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "EXTRAORDINÁRIO1 - CONVÊRIO ANDRES BELLO (iniciar estudos)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "EXTRAORDINÁRIO INGRESSO DIRETO CEPRE-UNI",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "EXTRAORDINÁRIO - DOIS PRIMEIROS ALUNOS",
+        "TALENTO BECA 18": "TALENTO BOLSA 18",
+        "INGRESO ESCOLAR NACIONAL": "INGRESSO ESCOLAR NACIONAL"
+    },
+    'ru': {  # Russian
+        "ORDINARIO": "ОБЫЧНЫЙ",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "ЭКСТРАОРДИНАРНЫЙ9 1 - КВАЛИФИЦИРОВАННЫЕ СПОРТСМЕНЫ ВЫСОКОГО УРОВНЯ (Начать обучение)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "ЭКСТРАОРДИНАРНЫЙ9 2 – ПРЯМОЕ ПОСТУПЛЕНИЕ CEPRE",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "ЭКСТРАОРДИНАРНЫЙ9 1 - СОГЛАШЕНИЕ ANDRES BELLO (начать обучение)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "ЭКСТРАОРДИНАРНОЕ ПРЯМОЕ ПОСТУПЛЕНИЕ CEPRE-UNI",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "ЭКСТРАОРДИНАРНОЕ - ПЕРВЫЕ ДВА СТУДЕНТА",
+        "TALENTO BECA 18": "ТАЛАНТ СТИПЕНДИЯ 18",
+        "INGRESO ESCOLAR NACIONAL": "НАЦИОНАЛЬНОЕ ШКОЛЬНОЕ ПОСТУПЛЕНИЕ"
+    },
+    'zh': {  # Chinese
+        "ORDINARIO": "普通",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "特殊1 - 高水平合格运动员（开始学习）",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "特殊2 – CEPRE直接入学",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "特殊1 - ANDRES BELLO协议（开始学习）",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "特殊 CEPRE-UNI直接入学",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "特殊 - 前两名学生",
+        "TALENTO BECA 18": "天才奖学金 18",
+        "INGRESO ESCOLAR NACIONAL": "国家学校入学"
+    },
+    'ja': {  # Japanese
+        "ORDINARIO": "一般",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)": "特別1 - 高レベル資格アスリート（学習開始）",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE": "特別2 – CEPRE直接入学",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)": "特別1 - ANDRES BELLO協定（学習開始）",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI": "特別 CEPRE-UNI直接入学",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS": "特別 - 最初の二人の生徒",
+        "TALENTO BECA 18": "タレント奨学金 18",
+        "INGRESO ESCOLAR NACIONAL": "国家学校入学"
+    }
+}
+
+def get_translated_schools(lang='es'):
+    """Returns translated school names for given language"""
+    base_schools = [
+        "LA DIVINA PROVIDENCIA",
+        "86019 LA LIBERTAD",
+        "0113 DANIEL ALOMIAS ROBLES",
+        "SEBASTIAN SALAZAR BONDY",
+        "TRILCE LOS OLIVOS",
+        "BARTOLOME HERRERA",
+        "FE Y ALEGRIA 59",
+        "CIENCIAS",
+        "SAN CARLOS",
+        "TRILCE SAN JUAN",
+        "OTRO"
+    ]
+    
+    translations = SCHOOL_TRANSLATIONS.get(lang, SCHOOL_TRANSLATIONS['es'])
+    return [translations.get(school, school) for school in base_schools]
+
+def get_translated_specialties(lang='es'):
+    """Returns translated specialty names for given language"""
+    base_specialties = [
+        "INGENIERÍA DE SISTEMAS",
+        "INGENIERÍA DE TELECOMUNICACIONES",
+        "INGENIERÍA MECÁNICA",
+        "INGENIERÍA ELECTRÓNICA",
+        "ARQUITECTURA",
+        "MEDICINA",
+        "DERECHO",
+        "ADMINISTRACIÓN",
+        "CONTABILIDAD",
+        "OTRO"
+    ]
+    
+    translations = SPECIALTY_TRANSLATIONS.get(lang, SPECIALTY_TRANSLATIONS['es'])
+    return [translations.get(specialty, specialty) for specialty in base_specialties]
+
+def get_translated_application_modes(lang='es'):
+    """Returns translated application mode names for given language"""
+    base_modes = [
+        "ORDINARIO",
+        "EXTRAORDINARIO1 - DEPORTISTAS CALIFICADOS DE ALTO NIVEL( Iniciar estudios)",
+        "EXTRAORDINARIO2 – INGRESO DIRECTO CEPRE",
+        "EXTRAORDINARIO1 - CONVENIO ANDRES BELLO (iniciar estudios)",
+        "EXTRAORDINARIO INGRESO DIRECTO CEPRE-UNI",
+        "EXTRAORDINARIO - DOS PRIMEROS ALUMNOS",
+        "TALENTO BECA 18",
+        "INGRESO ESCOLAR NACIONAL"
+    ]
+    
+    translations = APPLICATION_MODE_TRANSLATIONS.get(lang, APPLICATION_MODE_TRANSLATIONS['es'])
+    return [translations.get(mode, mode) for mode in base_modes]
+
+def get_original_value(translated_value, translation_dict, lang='es'):
+    """Returns the original (Spanish) value for a translated option"""
+    if lang == 'es':
+        return translated_value
+    
+    lang_translations = translation_dict.get(lang, {})
+    for original, translated in lang_translations.items():
+        if translated == translated_value:
+            return original
+    
+    return translated_value  # Return as-is if not found
