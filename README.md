@@ -52,7 +52,7 @@ Esto abrirá la interfaz en tu navegador, donde podrás ingresar los datos del e
 ## Despliegue en Cloud
 ### Streamlit Cloud
 - Almacenar el script de streamlit `train.py` en un repositorio github.
-- Iniciar sesión en [Streamlit Cloud][https://share.streamlit.io/].
+- Iniciar sesión en [Streamlit Cloud](https://share.streamlit.io/).
 - Seleccionar la opción de crear nueva aplicación.
 - Enlazar tu cuenta de Github.
 - Seleccionar el repositorio creado.
